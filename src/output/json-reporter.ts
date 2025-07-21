@@ -31,6 +31,7 @@ import {
 import { ScanResult, AccessibilityIssue } from '../types';
 import { CrawlSession } from '../types/crawler';
 import { WCAGLevel } from '../types/wcag';
+import { ErrorLogger, ErrorEntry, TechnicalIssue, ErrorStatistics } from './error-logger';
 
 /**
  * JSON report generator for accessibility scan results
@@ -203,7 +204,7 @@ export class JsonReporter {
     const domainBreakdown = this.calculateDomainBreakdown(scanResults);
 
     return {
-      baseUrl: crawlSession.startUrls[0],
+      baseUrl: crawlSession.startUrls[0] || '',
       crawlInfo,
       statistics,
       pages,
@@ -273,7 +274,7 @@ export class JsonReporter {
 
       return {
         url: result.url,
-        title: result.metadata?.title || 'Unknown Title',
+        title: 'Unknown Title', // Would be extracted from page content during scanning
         score: result.score,
         compliant: result.compliance?.compliant || false,
         issuesBySeverity,
@@ -376,6 +377,9 @@ export class JsonReporter {
 
     return issueGroups.map(group => {
       const primaryIssue = group[0];
+      if (!primaryIssue) {
+        throw new Error('Issue group is empty');
+      }
       const elements = group.map(issue => this.convertToAffectedElement(issue));
 
       return {
@@ -563,7 +567,8 @@ export class JsonReporter {
 
   private generateIssueTitle(issue: AccessibilityIssue): string {
     // Generate a concise title from the issue message
-    return issue.message.split('.')[0].trim();
+    const messagePart = issue.message?.split('.')[0];
+    return messagePart?.trim() || 'Accessibility Issue';
   }
 
   private truncateHtml(html: string, maxLength = 200): string {
@@ -573,13 +578,13 @@ export class JsonReporter {
   private extractElementText(html: string): string | undefined {
     // Simple text extraction from HTML
     const textMatch = html.match(/>([^<]+)</);
-    return textMatch ? textMatch[1].trim() : undefined;
+    return textMatch && textMatch[1] ? textMatch[1].trim() : undefined;
   }
 
   // Additional helper methods would be implemented here...
   private convertPageMetadata(scanResult: ScanResult): PageMetadata {
     return {
-      title: scanResult.metadata?.title || 'Unknown',
+      title: 'Unknown', // Would be extracted from page content during scanning
       language: 'en', // Default, should be extracted from scan
       viewport: '1280x720', // Default, should come from scan metadata
       charset: 'UTF-8', // Default, should be extracted
@@ -655,9 +660,10 @@ export class JsonReporter {
     });
 
     return Array.from(issueGroups.entries())
+      .filter(([, groupIssues]) => groupIssues.length > 0)
       .map(([wcagRef, groupIssues]) => ({
-        id: groupIssues[0].id,
-        title: this.generateIssueTitle(groupIssues[0]),
+        id: groupIssues[0]!.id,
+        title: this.generateIssueTitle(groupIssues[0]!),
         wcagReference: wcagRef,
         occurrences: groupIssues.length,
         affectedPages: 1, // Simplified - would need page tracking

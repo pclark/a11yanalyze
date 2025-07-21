@@ -1,0 +1,106 @@
+module.exports = {
+  scanning: {
+    wcagLevel: 'AA',
+    includeAAA: false,
+    includeARIA: true,
+    includeWarnings: true,
+    timeout: 30000,
+    retries: 2,
+    retryDelay: 1000,
+    waitForNetworkIdle: true,
+    captureScreenshots: false,
+    screenshotOnFailure: true,
+    customRules: [],
+    disabledRules: []
+  },
+  browser: {
+    headless: true,
+    viewport: { width: 1280, height: 720 },
+    userAgent: 'A11yAnalyze/1.0.0 (Accessibility Testing Tool)',
+    enableJavaScript: true,
+    allowInsecure: false,
+    locale: 'en-US',
+    timezone: 'UTC'
+  },
+  crawling: {
+    maxDepth: 2,
+    maxPages: 50,
+    maxConcurrency: 3,
+    requestDelay: 1000,
+    respectRobotsTxt: false,
+    followRedirects: true,
+    allowedDomains: [],
+    excludedDomains: [],
+    excludedPaths: [],
+    includedPaths: [],
+    useSitemaps: false,
+    discoverExternalLinks: false,
+    maxExternalDepth: 1
+  },
+  output: {
+    format: 'json',
+    verbose: false,
+    quiet: false,
+    debug: false,
+    colors: true,
+    timestamps: false,
+    progressBars: true,
+    exportErrors: false
+  },
+  scoring: {
+    profile: 'balanced',
+    minScore: 0,
+    maxScore: 100,
+    enableBonuses: true,
+    enablePenalties: true,
+    minSeverity: 'moderate'
+  },
+  issues: {
+    groupSimilar: true,
+    includeRemediation: true,
+    includeCodeExamples: true,
+    includeTestingGuidance: true,
+    contextAware: true,
+    maxCodeExamples: 3,
+    priorityMode: 'impact'
+  },
+  performance: {
+    enableCircuitBreaker: true,
+    circuitBreakerThreshold: 5,
+    maxRetries: 3,
+    baseRetryDelay: 1000,
+    timeoutStrategy: 'adaptive',
+    memoryLimit: 512,
+    resourceCleanup: true
+  },
+  advanced: {
+    experimentalFeatures: false,
+    cacheResults: false,
+    cacheTTL: 3600,
+    telemetry: false,
+    updateCheck: true,
+    configVersion: '1.0.0'
+  },
+  vpat: {
+    enabled: true,
+    mode: 'component',
+    outputFormat: 'json',
+    section508: true,
+    remarks: true,
+    jiraIntegration: false
+  },
+  storybook: {
+    enabled: true,
+    url: 'http://localhost:6006',
+    iframeSelector: '#storybook-preview-iframe',
+    componentIsolation: true,
+    autoDiscover: true
+  },
+  reporting: {
+    format: 'vpat2',
+    templatePath: './templates/vpat2.md',
+    jiraIntegration: false,
+    includeScreenshots: true,
+    includeSummary: true
+  }
+}; 

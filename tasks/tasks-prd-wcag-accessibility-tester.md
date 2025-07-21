@@ -62,7 +62,31 @@
 - `src/scoring/accessibility-scorer.test.ts` - Comprehensive scoring algorithm tests (42 test cases, 32 passing, validating all scoring features)
 - `src/output/console-reporter.ts` - Comprehensive console output system with progress bars, spinners, color-coded results, and detailed formatting
 - `src/output/console-reporter.test.ts` - Console reporter test suite (53 test cases covering configuration, progress tracking, and output formatting)
-- `src/cli/command-parser.ts` - CLI argument parsing and validation (placeholder)
+- `src/output/error-logger.ts` - Complete error logging and technical issue reporting system with structured logging, recovery tracking, and diagnostics
+- `src/output/error-logger.test.ts` - Comprehensive error logger test suite (30+ test categories covering all logging levels, error categories, and reporting features)
+- `src/output/json-reporter.test.ts` - Complete JSON reporter test suite (25+ test cases validating report generation, metadata, statistics, and error handling)
+- `src/output/issue-processor.test.ts` - Issue processor test suite (20+ test cases covering WCAG enhancement, prioritization, and contextual remediation)
+- `src/index.ts` - Comprehensive CLI interface with Commander.js integration, supporting single page scanning with full accessibility analysis pipeline and integrated help system
+- `src/cli/config-manager.ts` - Progressive configuration management system with file-based config, environment variables, CLI overrides, and comprehensive validation
+- `src/cli/config-manager.test.ts` - Configuration manager test suite (50+ test cases covering all configuration sources, merging, validation, and error handling)
+- `src/cli/help-manager.ts` - Comprehensive help system with 10 topic categories, interactive navigation, search functionality, quick tips, and configuration generation
+- `src/cli/help-manager.test.ts` - Help manager test suite (40+ test cases covering all help topics, search, navigation, and content quality)
+- `src/cli/url-validator.ts` - Comprehensive URL validation and error handling system with auto-correction suggestions, security checks, accessibility validation, and user-friendly error messages
+- `src/cli/url-validator.test.ts` - URL validator test suite (70+ test cases covering all validation scenarios, preset configurations, error handling, and formatting)
+- `src/integrations/storybook-adapter.ts` - Storybook integration adapter for component isolation testing, story navigation, and iframe handling
+- `src/integrations/storybook-adapter.test.ts` - Storybook adapter test suite covering component discovery, navigation, and isolation testing
+- `src/standards/wcag22-rules.ts` - Enhanced WCAG 2.2 success criteria implementation with custom rules for new 2.2 criteria
+- `src/standards/wcag22-rules.test.ts` - WCAG 2.2 rules test suite covering all new success criteria and edge cases
+- `src/standards/section508-compliance.ts` - Section 508 compliance module with federal-specific requirements and dual reporting
+- `src/standards/section508-compliance.test.ts` - Section 508 compliance test suite covering federal requirements and reporting
+- `src/design-system/token-validator.ts` - Design token accessibility validation for colors, typography, spacing, and other design system elements
+- `src/design-system/token-validator.test.ts` - Design token validator test suite covering all design system accessibility requirements
+- `src/design-system/pattern-tester.ts` - Pattern-based accessibility testing for forms, navigation, and component compositions
+- `src/design-system/pattern-tester.test.ts` - Pattern tester test suite covering common design system patterns and validation
+- `src/manual-testing/guided-workflows.ts` - Guided manual testing workflows with step-by-step instructions and WCAG criteria mapping
+- `src/manual-testing/guided-workflows.test.ts` - Guided workflows test suite covering manual testing procedures and validation
+- `src/manual-testing/keyboard-automation.ts` - Keyboard navigation testing automation with focus management and accessibility validation
+- `src/manual-testing/keyboard-automation.test.ts` - Keyboard automation test suite covering navigation patterns and focus management
 - `src/utils/browser-manager.ts` - Headless browser lifecycle management with Playwright integration
 - `src/utils/browser-manager.test.ts` - Unit tests for browser manager with comprehensive test coverage
 - `src/test-setup.ts` - Jest test setup with custom matchers and global test utilities
@@ -106,17 +130,55 @@
   - [x] 4.2 Create detailed issue reporting with WCAG references and remediation suggestions
   - [x] 4.3 Implement accessibility scoring algorithm with weighted calculations
   - [x] 4.4 Develop human-readable console output with progress indicators
-  - [ ] 4.5 Add error logging and technical issue reporting within output structure
-  - [ ] 4.6 Create unit tests for all reporting and scoring functionality
+  - [x] 4.5 Add error logging and technical issue reporting within output structure
+  - [x] 4.6 Create unit tests for all reporting and scoring functionality
 
 - [ ] 5.0 CLI Interface and Configuration Management
-  - [ ] 5.1 Implement command-line argument parsing with Commander.js or similar
-  - [ ] 5.2 Create progressive configuration system with sensible defaults
-  - [ ] 5.3 Add comprehensive help system with examples and use cases
-  - [ ] 5.4 Implement URL validation and error handling for CLI inputs
+  - [x] 5.1 Implement command-line argument parsing with Commander.js or similar
+  - [x] 5.2 Create progressive configuration system with sensible defaults
+  - [x] 5.3 Add comprehensive help system with examples and use cases
+  - [x] 5.4 Implement URL validation and error handling for CLI inputs
   - [ ] 5.5 Create configuration file support for advanced settings
   - [ ] 5.6 Add screen reader compatible CLI output design
   - [ ] 5.7 Create unit tests for CLI parsing and configuration management
+
+- [ ] 8.0 Enhanced WCAG 2.2 and Standards Compliance
+  - [ ] 8.1 Implement comprehensive WCAG 2.2 success criteria coverage
+  - [ ] 8.2 Add custom rules for new WCAG 2.2 criteria (Focus Not Obscured, Target Size, etc.)
+  - [ ] 8.3 Create Section 508 compliance module with specific federal requirements
+  - [ ] 8.4 Add dual WCAG/Section 508 reporting capabilities
+  - [ ] 8.5 Implement enhanced authentication accessibility testing
+  - [ ] 8.6 Add comprehensive keyboard navigation automation testing
+
+- [ ] 9.0 Storybook and Component-Level Testing Integration
+  - [x] 9.1 Create Storybook integration module for component isolation testing
+  - [x] 9.2 Implement story navigation and automated component discovery
+  - [x] 9.3 Add component state and variant accessibility testing
+  - [x] 9.4 Create Storybook-specific URL handling and iframe navigation
+  - [x] 9.5 Implement component composition and pattern validation
+  - [x] 9.6 Add Storybook CLI integration and build process hooks
+  - [x] 9.7 Batch VPAT/Section 508 reporting for Storybook (storybook-batch)
+
+- [ ] 10.0 Design System Accessibility Testing
+  - [x] 10.1 Create design token accessibility validation (colors, typography, spacing)
+  - [x] 10.2 Implement pattern-based accessibility testing (forms, navigation, etc.)
+  - [x] 10.3 Add component library specific accessibility checks
+  - [x] 10.4 Create design system compliance reporting
+  - [x] 10.5 Implement accessibility annotation generation for design systems
+  - [x] 10.6 Add component documentation accessibility validation
+  - [x] 10.7 Batch VPAT/Section 508 reporting for static HTML/component directories (html-batch)
+  - [x] 10.8 Support for custom batch sources via JSON/YAML config (--input-config)
+  - [ ] 10.9 Advanced output customization via templates (--template)
+  - [ ] 10.10 Planned Jira integration for compliance tracking
+  - [ ] 10.11 Batch error handling/reporting improvements
+
+- [ ] 11.0 Advanced Manual Testing Integration
+  - [ ] 11.1 Create guided manual testing workflows with step-by-step instructions
+  - [ ] 11.2 Implement keyboard navigation testing automation
+  - [ ] 11.3 Add screen reader simulation and testing capabilities
+  - [ ] 11.4 Create manual testing checklist generation based on WCAG criteria
+  - [ ] 11.5 Implement focus management and visual focus indicator testing
+  - [ ] 11.6 Add cognitive accessibility testing guidelines and automation
 
 - [ ] 6.0 Distribution and Packaging Setup
   - [ ] 6.1 Configure npm package distribution with proper metadata

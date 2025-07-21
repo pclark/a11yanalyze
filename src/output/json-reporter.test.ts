@@ -257,7 +257,7 @@ describe('JsonReporter', () => {
       expect(report.metadata.title).toBe('Custom Report Title');
       expect(report.metadata.description).toBe('Custom report description');
       expect(report.page?.issues).toHaveLength(1); // Only serious issue
-      expect(report.page?.issues[0].remediation).toBe(''); // No remediation
+      expect(report.page?.issues[0]?.remediation).toBe(''); // No remediation
     });
 
     it('should handle scan result with errors', async () => {
@@ -289,8 +289,8 @@ describe('JsonReporter', () => {
 
       expect(report.summary.status).toBe('failed');
       expect(report.errors).toHaveLength(1);
-      expect(report.errors[0].type).toBe('generation');
-      expect(report.errors[0].severity).toBe('critical');
+      expect(report.errors[0]?.type).toBe('generation');
+      expect(report.errors[0]?.severity).toBe('critical');
     });
   });
 
@@ -635,8 +635,8 @@ describe('JsonReporter', () => {
 
       // When grouped, should have 1 issue with 2 occurrences
       expect(report.page?.issues).toHaveLength(1);
-      expect(report.page?.issues[0].occurrences).toBe(2);
-      expect(report.page?.issues[0].elements).toHaveLength(2);
+      expect(report.page?.issues[0]?.occurrences).toBe(2);
+      expect(report.page?.issues[0]?.elements).toHaveLength(2);
     });
   });
 

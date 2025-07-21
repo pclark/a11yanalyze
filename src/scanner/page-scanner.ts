@@ -5,6 +5,250 @@ import { RuleEngine } from './rule-engine';
 import { ErrorResilienceManager, ResilienceConfig } from './error-resilience';
 import { WCAGLevelHandler, WCAGLevelConfig } from './wcag-level-handler';
 
+export interface KeyboardNavigationResult {
+  tabOrder: string[];
+  unreachableElements: string[];
+  focusTraps: string[];
+  missingFocusIndicators: string[];
+  issues: string[];
+}
+
+// Extend ScanResult type to include keyboardNavigation
+export interface ScanResultWithKeyboard extends ScanResult {
+  keyboardNavigation?: KeyboardNavigationResult;
+}
+
+export interface ScreenReaderSimulationResult {
+  tree: any;
+  missingNames: string[];
+  ambiguousRoles: string[];
+  skippedElements: string[];
+  summary: string[];
+}
+
+export interface ScanResultWithA11y extends ScanResultWithKeyboard {
+  screenReaderSimulation?: ScreenReaderSimulationResult;
+}
+
+export interface CognitiveAccessibilityResult {
+  readingLevel: number;
+  readingLevelCategory: 'easy' | 'average' | 'difficult';
+  jargonTerms: string[];
+  abbreviationCount: number;
+  summary: string[];
+}
+
+export interface ScanResultWithCognitive extends ScanResultWithA11y {
+  cognitiveAccessibility?: CognitiveAccessibilityResult;
+}
+
+export async function simulateKeyboardNavigation(page: Page): Promise<KeyboardNavigationResult> {
+  // Find all focusable elements (inside page context)
+  const focusable = await page.evaluate(() => {
+    const selectors = [
+      'a[href]', 'button', 'input', 'select', 'textarea', '[tabindex]:not([tabindex="-1"])', '[contenteditable]'
+    ];
+    return Array.from(document.querySelectorAll(selectors.join(','))).map(e => ({
+      html: (e as HTMLElement).outerHTML,
+      tag: e.tagName.toLowerCase(),
+      id: (e as HTMLElement).id,
+      className: (e as HTMLElement).className,
+      tabIndex: (e as HTMLElement).tabIndex,
+      isVisible: !!(e as HTMLElement).offsetParent,
+      isDisabled: (e as HTMLInputElement).disabled || false,
+      isContentEditable: (e as HTMLElement).isContentEditable,
+      isFocusable: true
+    }));
+  });
+  // Find all interactable elements (clickable, input, button, etc.)
+  const interactable = await page.evaluate(() => {
+    const selectors = [
+      'a[href]', 'button', 'input', 'select', 'textarea', '[role="button"]', '[role="link"]', '[onclick]', '[tabindex]'
+    ];
+    return Array.from(document.querySelectorAll(selectors.join(','))).map(e => ({
+      html: (e as HTMLElement).outerHTML,
+      tag: e.tagName.toLowerCase(),
+      id: (e as HTMLElement).id,
+      className: (e as HTMLElement).className,
+      tabIndex: (e as HTMLElement).tabIndex,
+      isVisible: !!(e as HTMLElement).offsetParent,
+      isDisabled: (e as HTMLInputElement).disabled || false,
+      isContentEditable: (e as HTMLElement).isContentEditable,
+      isFocusable: false
+    }));
+  });
+  const tabOrder: string[] = [];
+  const unreachableElements: string[] = [];
+  const focusTraps: string[] = [];
+  const missingFocusIndicators: string[] = [];
+  const focusOrderJumps: string[] = [];
+  const notInteractable: string[] = [];
+  const notFocusable: string[] = [];
+  const issues: string[] = [];
+
+  // Simulate tabbing through the page
+  let lastFocused = '';
+  let focusCycle = new Set<string>();
+  let lastDomIndex = -1;
+  for (let i = 0; i < focusable.length + 10; i++) { // +10 to detect cycles
+    await page.keyboard.press('Tab');
+    const active = await page.evaluate(() => {
+      const el = document.activeElement;
+      if (!el) return { desc: '', domIndex: -1 };
+      let desc = el.tagName.toLowerCase();
+      if ((el as HTMLElement).id) desc += `#${(el as HTMLElement).id}`;
+      if ((el as HTMLElement).className) desc += `.${(el as HTMLElement).className.split(' ').join('.')}`;
+      // Find DOM index
+      let domIndex = -1;
+      const all = Array.from(document.querySelectorAll('*'));
+      for (let j = 0; j < all.length; j++) {
+        if (all[j] === el) { domIndex = j; break; }
+      }
+      return { desc, domIndex };
+    });
+    if (!active.desc || tabOrder.includes(active.desc)) {
+      if (active.desc && focusCycle.has(active.desc)) {
+        focusTraps.push(active.desc);
+        issues.push(`Focus trap detected at ${active.desc}`);
+        break;
+      }
+      focusCycle.add(active.desc);
+      break;
+    }
+    // Detect focus order jumps
+    if (lastDomIndex !== -1 && active.domIndex !== -1 && active.domIndex < lastDomIndex) {
+      focusOrderJumps.push(active.desc);
+      issues.push(`Focus order jump detected at ${active.desc}`);
+    }
+    lastDomIndex = active.domIndex;
+    tabOrder.push(active.desc);
+    lastFocused = active.desc;
+    // Check for focus indicator (inside page context)
+    const hasIndicator = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement;
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      return style.outlineStyle !== 'none' || style.boxShadow !== 'none';
+    });
+    if (!hasIndicator) {
+      missingFocusIndicators.push(active.desc);
+      issues.push(`Missing visible focus indicator on ${active.desc}`);
+    }
+  }
+  // Detect unreachable elements
+  for (const el of focusable) {
+    if (!tabOrder.some(sel => el.html.includes(sel))) {
+      unreachableElements.push(el.html);
+      issues.push(`Element not reachable by Tab: ${el.html}`);
+    }
+  }
+  // Detect focusable but not interactable
+  for (const el of focusable) {
+    if (!interactable.some(i => i.html === el.html)) {
+      notInteractable.push(el.html);
+      issues.push(`Focusable but not interactable: ${el.html}`);
+    }
+  }
+  // Detect interactable but not focusable
+  for (const el of interactable) {
+    if (!focusable.some(f => f.html === el.html)) {
+      notFocusable.push(el.html);
+      issues.push(`Interactable but not focusable: ${el.html}`);
+    }
+  }
+  return { tabOrder, unreachableElements, focusTraps, missingFocusIndicators, issues: [
+    ...issues,
+    ...focusOrderJumps.map(j => `Focus order jump at ${j}`),
+    ...notInteractable.map(n => `Focusable but not interactable: ${n}`),
+    ...notFocusable.map(n => `Interactable but not focusable: ${n}`)
+  ] };
+}
+
+export async function simulateScreenReader(page: Page): Promise<ScreenReaderSimulationResult> {
+  // Get the accessibility tree
+  const tree = await page.accessibility.snapshot({ interestingOnly: false });
+  const missingNames: string[] = [];
+  const ambiguousRoles: string[] = [];
+  const skippedElements: string[] = [];
+  const summary: string[] = [];
+
+  function walk(node: any, path: string[] = []) {
+    if (!node) return;
+    const label = node.name || '';
+    const role = node.role || '';
+    const nodePath = [...path, role || node.name || 'unknown'].join(' > ');
+    if (!label && ['button', 'link', 'textbox', 'checkbox', 'radio', 'img'].includes(role)) {
+      missingNames.push(nodePath);
+      summary.push(`Element with role '${role}' missing accessible name at ${nodePath}`);
+    }
+    if (role === 'generic' || !role) {
+      ambiguousRoles.push(nodePath);
+      summary.push(`Element with ambiguous or missing role at ${nodePath}`);
+    }
+    if (node.focusable && node.name === undefined) {
+      skippedElements.push(nodePath);
+      summary.push(`Focusable element skipped by accessibility tree at ${nodePath}`);
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        walk(child, [...path, role || node.name || 'unknown']);
+      }
+    }
+  }
+  walk(tree);
+  return { tree, missingNames, ambiguousRoles, skippedElements, summary };
+}
+
+export async function analyzeCognitiveAccessibility(page: Page): Promise<CognitiveAccessibilityResult> {
+  // Extract all visible text
+  const text = await page.evaluate(() => {
+    function getText(node: Node): string {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+      if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).offsetParent !== null) {
+        let t = '';
+        for (const child of Array.from(node.childNodes)) t += getText(child);
+        return t;
+      }
+      return '';
+    }
+    return getText(document.body);
+  });
+  // Flesch-Kincaid reading level
+  function countSyllables(word: string): number {
+    word = word.toLowerCase();
+    if (word.length <= 3) return 1;
+    word = word.replace(/(?:e$)/, '');
+    const matches = word.match(/[aeiouy]{1,2}/g);
+    return matches ? matches.length : 1;
+  }
+  function countWords(str: string): number {
+    return (str.match(/\b\w+\b/g) || []).length;
+  }
+  function countSentences(str: string): number {
+    return (str.match(/[.!?]+/g) || []).length;
+  }
+  function countSyllablesInText(str: string): number {
+    return (str.match(/\b\w+\b/g) || []).reduce((sum, word) => sum + countSyllables(word), 0);
+  }
+  const words = countWords(text);
+  const sentences = countSentences(text);
+  const syllables = countSyllablesInText(text);
+  const readingLevel = sentences > 0 ? 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59 : 0;
+  let readingLevelCategory: 'easy' | 'average' | 'difficult' = 'easy';
+  if (readingLevel > 10) readingLevelCategory = 'difficult';
+  else if (readingLevel > 7) readingLevelCategory = 'average';
+  // Jargon/abbreviation detection (simple)
+  const jargonList = ['utilize', 'leverage', 'synergy', 'paradigm', 'bandwidth', 'stakeholder', 'streamline', 'incentivize', 'touchpoint', 'vertical', 'granular', 'pivot', 'ecosystem', 'disrupt', 'scalable', 'proactive', 'ideate', 'circle back', 'low-hanging fruit'];
+  const jargonTerms = jargonList.filter(j => text.toLowerCase().includes(j));
+  const abbreviationCount = (text.match(/\b[A-Z]{2,}\b/g) || []).length;
+  const summary = [
+    `Flesch-Kincaid reading level: ${readingLevel.toFixed(1)} (${readingLevelCategory})`,
+    `Jargon terms detected: ${jargonTerms.length > 0 ? jargonTerms.join(', ') : 'None'}`,
+    `Abbreviations detected: ${abbreviationCount}`
+  ];
+  return { readingLevel, readingLevelCategory, jargonTerms, abbreviationCount, summary };
+}
+
 /**
  * Core single page accessibility scanner
  * Implements WCAG 2.2 AA testing with hybrid rule engine and JavaScript rendering support
@@ -79,7 +323,7 @@ export class PageScanner {
    * @param options - Scanning options
    * @returns Promise<ScanResult>
    */
-  async scan(url: string, options: Partial<ScanOptions> = {}): Promise<ScanResult> {
+  async scan(url: string, options: Partial<ScanOptions> = {}): Promise<ScanResultWithCognitive> {
     const startTime = Date.now();
     const scanOptions = {
       wcagLevel: options.wcagLevel ?? 'AA',
@@ -241,6 +485,10 @@ export class PageScanner {
         }
       }
 
+      const keyboardNavigationResult = await simulateKeyboardNavigation(page);
+      const screenReaderSimulationResult = await simulateScreenReader(page);
+      const cognitiveResult = await analyzeCognitiveAccessibility(page);
+
       return {
         url,
         timestamp: new Date().toISOString(),
@@ -249,7 +497,10 @@ export class PageScanner {
         errors: errors.length > 0 ? errors : undefined,
         metadata,
         compliance: complianceSummary,
-      };
+        keyboardNavigation: keyboardNavigationResult,
+        screenReaderSimulation: screenReaderSimulationResult,
+        cognitiveAccessibility: cognitiveResult,
+      } as ScanResultWithCognitive;
 
     } catch (error) {
       // Handle unexpected errors with proper categorization
@@ -278,7 +529,7 @@ export class PageScanner {
         issues,
         errors,
         metadata,
-      };
+      } as ScanResultWithCognitive;
 
     } finally {
       // Always cleanup the page

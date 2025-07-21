@@ -10,6 +10,7 @@ import ora, { Ora } from 'ora';
 import { ScanResult, AccessibilityIssue } from '../types';
 import { CrawlSession } from '../types/crawler';
 import { ScoreBreakdown, SiteScore } from '../scoring/accessibility-scorer';
+import { ErrorLogger, ErrorEntry, TechnicalIssue, ErrorStatistics } from './error-logger';
 
 /**
  * Console output configuration
@@ -649,6 +650,246 @@ export class ConsoleReporter {
   }
 
   /**
+   * Display error summary from error logger
+   */
+  showErrorSummary(errorLogger: ErrorLogger): void {
+    if (this.config.quiet) return;
+
+    const stats = errorLogger.getErrorStatistics();
+    const totalErrors = Object.values(stats.byLevel).reduce((sum, count) => sum + count, 0);
+
+    if (totalErrors === 0) {
+      console.log(chalk.green(`\n${figures.tick} No errors encountered during analysis`));
+      return;
+    }
+
+    console.log(chalk.bold('\n🚨 Error Summary'));
+    console.log('═'.repeat(Math.min(15, this.config.maxWidth)));
+
+    // Error counts by level
+    console.log(`Total Errors: ${totalErrors}`);
+    
+    if (stats.byLevel.fatal > 0) {
+      console.log(`  ${chalk.red.bold('Fatal')}: ${stats.byLevel.fatal}`);
+    }
+    if (stats.byLevel.error > 0) {
+      console.log(`  ${chalk.red('Error')}: ${stats.byLevel.error}`);
+    }
+    if (stats.byLevel.warn > 0) {
+      console.log(`  ${chalk.yellow('Warning')}: ${stats.byLevel.warn}`);
+    }
+    if (stats.byLevel.info > 0 && this.config.verbose) {
+      console.log(`  ${chalk.blue('Info')}: ${stats.byLevel.info}`);
+    }
+    if (stats.byLevel.debug > 0 && this.config.debug) {
+      console.log(`  ${chalk.gray('Debug')}: ${stats.byLevel.debug}`);
+    }
+
+    // Recovery statistics
+    if (stats.recovery.totalAttempts > 0) {
+      const recoveryRate = Math.round(stats.recovery.recoveryRate * 100);
+      const recoveryColor = recoveryRate > 80 ? chalk.green : recoveryRate > 50 ? chalk.yellow : chalk.red;
+      console.log(`Recovery Rate: ${recoveryColor(recoveryRate + '%')} (${stats.recovery.successfulRecoveries}/${stats.recovery.totalAttempts})`);
+    }
+
+    // Most frequent errors
+    if (this.config.verbose && stats.frequentErrors.length > 0) {
+      console.log(chalk.bold('\n🔍 Most Frequent Errors:'));
+      stats.frequentErrors.slice(0, 5).forEach((error, index) => {
+        const levelColor = this.getErrorLevelColor(error.level);
+        console.log(`  ${index + 1}. ${levelColor(error.level.toUpperCase())}: ${error.message} (${error.count}x)`);
+      });
+    }
+  }
+
+  /**
+   * Display detailed error entries
+   */
+  showDetailedErrors(errorLogger: ErrorLogger, maxErrors: number = 10): void {
+    if (this.config.quiet) return;
+
+    const errors = errorLogger.getErrors().slice(-maxErrors); // Show recent errors
+    
+    if (errors.length === 0) return;
+
+    console.log(chalk.bold('\n📋 Recent Errors'));
+    console.log('═'.repeat(Math.min(15, this.config.maxWidth)));
+
+    errors.forEach((error, index) => {
+      const levelColor = this.getErrorLevelColor(error.level);
+      const categoryIcon = this.getErrorCategoryIcon(error.category);
+      
+      console.log(`${index + 1}. ${categoryIcon} ${levelColor(error.level.toUpperCase())} [${error.category}]`);
+      console.log(`   ${error.message}`);
+      
+      if (error.url) {
+        console.log(chalk.gray(`   URL: ${error.url}`));
+      }
+      
+      if (error.source !== 'unknown') {
+        console.log(chalk.gray(`   Source: ${error.source}`));
+      }
+      
+      if (error.recoveryAction) {
+        const recoveryColor = error.recovered ? chalk.green : chalk.yellow;
+        console.log(recoveryColor(`   Recovery: ${error.recoveryAction}`));
+      }
+      
+      if (this.config.debug && error.stack) {
+        console.log(chalk.gray(`   Stack: ${error.stack.split('\n')[0]}`));
+      }
+      
+      console.log(''); // Add spacing
+    });
+  }
+
+  /**
+   * Display technical issues
+   */
+  showTechnicalIssues(errorLogger: ErrorLogger): void {
+    if (this.config.quiet) return;
+
+    const issues = errorLogger.getTechnicalIssues();
+    
+    if (issues.length === 0) return;
+
+    console.log(chalk.bold('\n🔧 Technical Issues Detected'));
+    console.log('═'.repeat(Math.min(30, this.config.maxWidth)));
+
+    issues.forEach((issue, index) => {
+      const severityColor = this.getTechnicalIssueSeverityColor(issue.severity);
+      const typeIcon = this.getTechnicalIssueTypeIcon(issue.type);
+      
+      console.log(`${index + 1}. ${typeIcon} ${severityColor(issue.severity.toUpperCase())} - ${issue.title}`);
+      console.log(`   ${issue.description}`);
+      
+      if (issue.affectedUrls.length > 0) {
+        const urlsToShow = issue.affectedUrls.slice(0, 3);
+        console.log(chalk.gray(`   Affected URLs: ${urlsToShow.join(', ')}`));
+        if (issue.affectedUrls.length > 3) {
+          console.log(chalk.gray(`   ... and ${issue.affectedUrls.length - 3} more`));
+        }
+      }
+      
+      if (issue.occurrenceCount > 1) {
+        console.log(chalk.gray(`   Occurrences: ${issue.occurrenceCount}`));
+      }
+      
+      if (this.config.verbose && issue.suggestedFixes.length > 0) {
+        console.log(chalk.bold('   💡 Suggested Fixes:'));
+        issue.suggestedFixes.slice(0, 3).forEach(fix => {
+          console.log(chalk.gray(`     • ${fix}`));
+        });
+      }
+      
+      console.log(''); // Add spacing
+    });
+  }
+
+  /**
+   * Display system diagnostics information
+   */
+  async showSystemDiagnostics(errorLogger: ErrorLogger): Promise<void> {
+    if (this.config.quiet || !this.config.debug) return;
+
+    try {
+      const diagnostics = await errorLogger.collectSystemDiagnostics();
+      
+      console.log(chalk.bold('\n🖥️  System Diagnostics'));
+      console.log('═'.repeat(Math.min(20, this.config.maxWidth)));
+      
+      // System information
+      console.log(chalk.bold('System:'));
+      console.log(`  Platform: ${diagnostics.system.platform} (${diagnostics.system.arch})`);
+      console.log(`  Node.js: ${diagnostics.system.nodeVersion}`);
+      console.log(`  Memory: ${Math.round(diagnostics.system.memory.percentage)}% used (${Math.round(diagnostics.system.memory.used / 1024 / 1024)}MB / ${Math.round(diagnostics.system.memory.total / 1024 / 1024)}MB)`);
+      console.log(`  CPU: ${diagnostics.system.cpu.model} (${diagnostics.system.cpu.cores} cores)`);
+      
+      // Browser information
+      console.log(chalk.bold('\nBrowser:'));
+      console.log(`  Engine: ${diagnostics.browser.name} ${diagnostics.browser.version}`);
+      console.log(`  User Agent: ${diagnostics.browser.userAgent}`);
+      
+      // Network information
+      console.log(chalk.bold('\nNetwork:'));
+      const connectivityColor = diagnostics.network.connectivity === 'online' ? chalk.green : chalk.red;
+      console.log(`  Connectivity: ${connectivityColor(diagnostics.network.connectivity)}`);
+      console.log(`  DNS Resolution: ${diagnostics.network.dnsResolution ? chalk.green('OK') : chalk.red('Failed')}`);
+      
+    } catch (error) {
+      console.log(chalk.red('Failed to collect system diagnostics'));
+    }
+  }
+
+  /**
+   * Show comprehensive error report
+   */
+  showErrorReport(errorLogger: ErrorLogger): void {
+    if (this.config.quiet) return;
+
+    this.showErrorSummary(errorLogger);
+    
+    if (this.config.verbose) {
+      this.showTechnicalIssues(errorLogger);
+      this.showDetailedErrors(errorLogger, 5);
+    }
+  }
+
+  /**
+   * Helper methods for error display
+   */
+  
+  private getErrorLevelColor(level: string): typeof chalk {
+    switch (level) {
+      case 'fatal': return chalk.red.bold;
+      case 'error': return chalk.red;
+      case 'warn': return chalk.yellow;
+      case 'info': return chalk.blue;
+      case 'debug': return chalk.gray;
+      default: return chalk.white;
+    }
+  }
+
+  private getErrorCategoryIcon(category: string): string {
+    const icons = {
+      browser: '🌐',
+      network: '📡',
+      parsing: '📝',
+      timeout: '⏱️',
+      validation: '✅',
+      configuration: '⚙️',
+      scanning: '🔍',
+      crawling: '🕷️',
+      output: '📄',
+      system: '💻',
+      unknown: '❓',
+    };
+    return icons[category as keyof typeof icons] || '❓';
+  }
+
+  private getTechnicalIssueSeverityColor(severity: string): typeof chalk {
+    switch (severity) {
+      case 'critical': return chalk.red.bold;
+      case 'high': return chalk.red;
+      case 'medium': return chalk.yellow;
+      case 'low': return chalk.blue;
+      default: return chalk.white;
+    }
+  }
+
+  private getTechnicalIssueTypeIcon(type: string): string {
+    const icons = {
+      performance: '⚡',
+      compatibility: '🔄',
+      resource: '📦',
+      security: '🔒',
+      accessibility: '♿',
+      other: '🔧',
+    };
+    return icons[type as keyof typeof icons] || '🔧';
+  }
+
+  /**
    * Clean up resources
    */
   cleanup(): void {
@@ -669,7 +910,7 @@ export class ConsoleReporter {
    * Helper methods
    */
 
-  private getScoreColor(score: number): any {
+  private getScoreColor(score: number): typeof chalk {
     if (score >= 90) return chalk.green.bold;
     if (score >= 80) return chalk.green;
     if (score >= 70) return chalk.yellow;
