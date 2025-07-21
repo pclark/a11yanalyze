@@ -75,3 +75,9 @@ package-lock.json.*
 
 # Optional: Ignore coverage reports from other tools
 coverage-final.json 
+
+# Ignore all Markdown files in tasks/
+tasks/*.md
+
+# Ignore all files in .cursor/rules/
+.cursor/rules/ 
