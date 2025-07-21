@@ -3,7 +3,7 @@
  * Covers guidelines, success criteria, and rule implementations
  */
 
-export type WCAGLevel = 'A' | 'AA' | 'AAA';
+export type WCAGLevel = 'A' | 'AA' | 'AAA' | 'ARIA';
 export type WCAGPrinciple = 'perceivable' | 'operable' | 'understandable' | 'robust';
 
 export interface WCAGGuideline {

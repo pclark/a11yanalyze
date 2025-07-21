@@ -19,12 +19,19 @@ export interface ScanResult {
   issues: AccessibilityIssue[];
   errors?: ScanError[];
   metadata: ScanMetadata;
+  compliance?: {
+    compliant: boolean;
+    primaryLevelIssues: number;
+    warningIssues: number;
+    totalIssues: number;
+    levelBreakdown: Record<WCAGLevel, number>;
+  };
 }
 
 export interface AccessibilityIssue {
   id: string;
   wcagReference: string;
-  level: 'A' | 'AA' | 'AAA' | 'ARIA';
+  level: WCAGLevel;
   severity: 'critical' | 'serious' | 'moderate' | 'minor' | 'warning';
   element: string;
   selector: string;
