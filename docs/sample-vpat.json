@@ -1,0 +1,53 @@
+{
+  "component": "Button Component",
+  "vpatVersion": "TastySoft Design System VPAT2 Form 2025",
+  "criteria": [
+    {
+      "id": "1.1.1",
+      "name": "Image missing alt text",
+      "status": "Supports",
+      "remarks": "Add descriptive alt text to the image [More info](https://help.example.com/alt-text)"
+    },
+    {
+      "id": "2.1.1",
+      "name": "Keyboard navigation issue",
+      "status": "Does Not Support",
+      "remarks": "Button not reachable by Tab key [More info](https://help.example.com/keyboard)"
+    }
+  ],
+  "summary": {
+    "supports": 1,
+    "partiallySupports": 0,
+    "doesNotSupport": 1,
+    "notApplicable": 0,
+    "notEvaluated": 0
+  },
+  "keyboardNavigation": {
+    "issues": [
+      "Missing visible focus indicator on button#submit",
+      "Focusable but not interactable: <button id=\"submit\" ...>"
+    ],
+    "unreachableElements": ["<button id=\"submit\" ...>"],
+    "focusTraps": [],
+    "missingFocusIndicators": ["button#submit"]
+  },
+  "screenReaderSimulation": {
+    "summary": [
+      "Element with role 'button' missing accessible name at document > button"
+    ],
+    "missingNames": ["document > button"],
+    "ambiguousRoles": [],
+    "skippedElements": []
+  },
+  "cognitiveAccessibility": {
+    "readingLevel": 9.2,
+    "readingLevelCategory": "average",
+    "jargonTerms": [],
+    "abbreviationCount": 0,
+    "summary": [
+      "Flesch-Kincaid reading level: 9.2 (average)",
+      "Jargon terms detected: None",
+      "Abbreviations detected: 0"
+    ]
+  }
+} 
