@@ -51,7 +51,34 @@ export class HtmlBatchRunner {
     const errors: any[] = [];
     for (const target of targets) {
       try {
-        const scanResult = await this.scanTarget(target, options);
+        const pageScanner = new PageScanner(
+          {
+            headless: true,
+            viewport: { width: 1280, height: 720 },
+            timeout: options.timeout || 30000,
+          },
+          {
+            wcagLevel: (options.wcagLevel as any) || 'AA',
+            includeAAA: false,
+            includeARIA: true,
+            customRules: [],
+            disabledRules: [],
+          }
+        );
+        await pageScanner.initialize();
+        const scanOptions = {
+          wcagLevel: (options.wcagLevel as any) || 'AA',
+          includeAAA: false,
+          includeARIA: true,
+          customRules: [],
+          disabledRules: [],
+        };
+        // Run the scan and get results
+        const scanResult = await pageScanner.scan(target.path, scanOptions);
+
+        // Use keyboardNavigation and screenReaderSimulation from scanResult
+        // (No need to call simulateKeyboardNavigation or simulateScreenReader here)
+
         const vpatReport = VpatReporter.generateJsonReport(target.name, scanResult);
         const baseName = this.sanitizeName(target.name);
         if (options.format === 'json' || options.format === 'both') {
@@ -131,37 +158,5 @@ export class HtmlBatchRunner {
 
   sanitizeName(name: string): string {
     return name.replace(/[^a-zA-Z0-9_-]/g, '_');
-  }
-
-  async scanTarget(target: { path: string; isUrl: boolean }, options: HtmlBatchOptions): Promise<ScanResult> {
-    const pageScanner = new PageScanner(
-      {
-        headless: true,
-        viewport: { width: 1280, height: 720 },
-        timeout: options.timeout || 30000,
-      },
-      {
-        wcagLevel: (options.wcagLevel as any) || 'AA',
-        includeAAA: false,
-        includeARIA: true,
-        customRules: [],
-        disabledRules: [],
-      }
-    );
-    await pageScanner.initialize();
-    const scanResult = await pageScanner.scan(target.path, {
-      wcagLevel: (options.wcagLevel as any) || 'AA',
-      includeAAA: false,
-      includeARIA: true,
-      customRules: [],
-      disabledRules: [],
-    });
-    if (options.keyboardNav !== false) {
-      scanResult.keyboardNavigation = await simulateKeyboardNavigation(pageScanner['browserManager']['page']);
-    }
-    if (options.screenReaderSim !== false) {
-      scanResult.screenReaderSimulation = await simulateScreenReader(pageScanner['browserManager']['page']);
-    }
-    return scanResult;
   }
 } 

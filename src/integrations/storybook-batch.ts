@@ -63,8 +63,10 @@ export class StorybookBatchRunner {
       const res = await fetch(`${storybookUrl.replace(/\/$/, '')}/stories.json`);
       if (res.ok) {
         const data = await res.json();
-        if (data.stories) {
-          return Object.values(data.stories).map((story: any) => ({
+        // Type guard for 'data' before accessing data.stories
+        if (typeof data === 'object' && data !== null && 'stories' in data) {
+          // Now safe to access data.stories
+          return Object.values((data as any).stories).map((story: any) => ({
             name: story.name || story.id,
             url: `${storybookUrl.replace(/\/$/, '')}/iframe.html?id=${story.id}`,
           }));
@@ -94,13 +96,12 @@ export class StorybookBatchRunner {
       }
     );
     await pageScanner.initialize();
+    // Run the scan and get results
     const scanResult = await pageScanner.scan(url);
-    if (options.keyboardNav !== false) {
-      scanResult.keyboardNavigation = await simulateKeyboardNavigation(pageScanner['browserManager']['page']);
-    }
-    if (options.screenReaderSim !== false) {
-      scanResult.screenReaderSimulation = await simulateScreenReader(pageScanner['browserManager']['page']);
-    }
+
+    // Use keyboardNavigation and screenReaderSimulation from scanResult
+    // (No need to call simulateKeyboardNavigation or simulateScreenReader here)
+
     return scanResult;
   }
 } 

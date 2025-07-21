@@ -624,28 +624,36 @@ export class ConsoleReporter {
   /**
    * Log errors and warnings
    */
-  logError(message: string, error?: Error): void {
-    console.error(chalk.red(`${figures.cross} Error: ${message}`));
-    if (error && this.config.debug) {
-      console.error(chalk.gray(error.stack));
-    }
-  }
-
   logWarning(message: string): void {
     if (!this.config.quiet) {
-      console.warn(chalk.yellow(`${figures.warning} Warning: ${message}`));
+      console.log(chalk.yellow(`⚠ Warning: ${message}`));
     }
   }
-
+  logError(message: string, error?: Error): void {
+    if (!this.config.quiet) {
+      console.log(chalk.red(`🚨 Error: ${message}`));
+      if (error) {
+        console.log(chalk.red(error.stack || error.message));
+      }
+    }
+  }
+  logPass(message: string): void {
+    if (!this.config.quiet) {
+      console.log(chalk.green(`✔ Pass: ${message}`));
+    }
+  }
   logInfo(message: string): void {
-    if (!this.config.quiet && this.config.verbose) {
-      console.log(chalk.blue(`${figures.info} ${message}`));
+    if (!this.config.quiet) {
+      console.log(chalk.cyan(message));
     }
   }
-
-  logDebug(message: string): void {
-    if (this.config.debug) {
-      console.log(chalk.gray(`${figures.bullet} Debug: ${message}`));
+  logSummary(summary: string[]): void {
+    if (!this.config.quiet) {
+      console.log(chalk.cyan('════════════════════════════════════════════════════'));
+      for (const line of summary) {
+        console.log(chalk.cyan(line));
+      }
+      console.log(chalk.cyan('════════════════════════════════════════════════════'));
     }
   }
 

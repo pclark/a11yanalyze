@@ -147,6 +147,13 @@ export class RuleEngine {
 
       // Configure and run axe
       const config = this.config.axeCoreConfig;
+      if (!config) {
+        throw new Error('axeCoreConfig is not defined');
+      }
+      // Ensure rules is always an object
+      if (!config.rules || Array.isArray(config.rules)) {
+        config.rules = {};
+      }
       const axeResults = await page.evaluate((configParam: any) => {
         return new Promise((resolve, reject) => {
           try {
@@ -155,12 +162,10 @@ export class RuleEngine {
               reject(new Error('axe-core not loaded'));
               return;
             }
-
             win.axe.configure({
               tags: configParam.tags,
               rules: configParam.rules,
             });
-
             win.axe.run((err: any, results: any) => {
               if (err) {
                 reject(err);

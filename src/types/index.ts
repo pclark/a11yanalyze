@@ -90,6 +90,7 @@ export interface ScanOptions {
   screenshot: boolean;
   customRules?: string[];
   disabledRules?: string[];
+  pageReadyTimeout?: number;
 }
 
 export interface CrawlOptions extends ScanOptions {

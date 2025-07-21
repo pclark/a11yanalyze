@@ -40,6 +40,8 @@ export interface CognitiveAccessibilityResult {
 
 export interface ScanResultWithCognitive extends ScanResultWithA11y {
   cognitiveAccessibility?: CognitiveAccessibilityResult;
+  summary?: string[];
+  groupedWarnings?: Record<string, string[]>;
 }
 
 export async function simulateKeyboardNavigation(page: Page): Promise<KeyboardNavigationResult> {
@@ -329,6 +331,7 @@ export class PageScanner {
       wcagLevel: options.wcagLevel ?? 'AA',
       includeWarnings: options.includeWarnings ?? true,
       timeout: options.timeout ?? 30000,
+      pageReadyTimeout: options.pageReadyTimeout ?? 10000, // new option
       outputPath: options.outputPath,
       includeAAA: options.includeAAA ?? false,
       includeARIA: options.includeARIA ?? true,
@@ -404,7 +407,7 @@ export class PageScanner {
 
       // Wait for page to be fully loaded (including JavaScript) with resilience
       await this.resilienceManager.executeResilient(
-        () => this.waitForPageReady(page!, scanOptions.timeout),
+        () => this.waitForPageReady(page!, scanOptions.pageReadyTimeout),
         'pageReady',
         {
           useRetry: true,
@@ -456,7 +459,12 @@ export class PageScanner {
       }
 
       // Calculate accessibility score
-      const score = this.calculateAccessibilityScore(issues, metadata.testedElements);
+      let score = this.calculateAccessibilityScore(issues, metadata.testedElements);
+      // Reduce score if there are warnings
+      const warningCount = issues.filter(i => i.severity === 'warning').length;
+      if (warningCount > 0) {
+        score = Math.max(0, score - warningCount * 2);
+      }
 
       // Get WCAG compliance summary
       const complianceSummary = this.wcagLevelHandler.getComplianceSummary(issues);
@@ -489,6 +497,19 @@ export class PageScanner {
       const screenReaderSimulationResult = await simulateScreenReader(page);
       const cognitiveResult = await analyzeCognitiveAccessibility(page);
 
+      // Group similar warnings and add remediation tips
+      const groupedWarnings: Record<string, string[]> = {};
+      for (const issue of issues.filter(i => i.severity === 'warning')) {
+        const key = issue.message;
+        if (!groupedWarnings[key]) groupedWarnings[key] = [];
+        groupedWarnings[key].push(issue.element);
+      }
+      // Add summary to result
+      const summary = [
+        `Total issues: ${issues.length}`,
+        `Warnings: ${warningCount}`,
+        `Passed checks: ${metadata.testedElements - issues.length}`
+      ];
       return {
         url,
         timestamp: new Date().toISOString(),
@@ -500,6 +521,8 @@ export class PageScanner {
         keyboardNavigation: keyboardNavigationResult,
         screenReaderSimulation: screenReaderSimulationResult,
         cognitiveAccessibility: cognitiveResult,
+        summary,
+        groupedWarnings,
       } as ScanResultWithCognitive;
 
     } catch (error) {

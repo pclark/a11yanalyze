@@ -81,3 +81,6 @@ tasks/*.md
 
 # Ignore all files in .cursor/rules/
 .cursor/rules/ 
+
+# Ignore generated reports
+report.json 

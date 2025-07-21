@@ -42,6 +42,11 @@ const consoleSpy = {
   error: jest.spyOn(console, 'error').mockImplementation(() => {}),
 };
 
+// Helper to check if any console.log call contains a substring
+function logContains(substring: string) {
+  return consoleSpy.log.mock.calls.flat().some((call: any) => typeof call === 'string' && call.includes(substring));
+}
+
 describe('HelpManager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -51,92 +56,66 @@ describe('HelpManager', () => {
   describe('Topic Help Display', () => {
     it('should display getting-started help', () => {
       HelpManager.showHelp('getting-started');
-      
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Getting Started')
-      );
+      expect(logContains('Getting Started')).toBe(true);
     });
 
     it('should display scanning help', () => {
       HelpManager.showHelp('scanning');
-      
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Single Page Scanning')
-      );
+      expect(logContains('Single Page Scanning')).toBe(true);
     });
 
     it('should display crawling help', () => {
       HelpManager.showHelp('crawling');
-      
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Website Crawling')
-      );
+      expect(logContains('Website Crawling')).toBe(true);
     });
 
     it('should display configuration help', () => {
       HelpManager.showHelp('configuration');
-      
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Configuration Guide')
-      );
+      expect(logContains('Configuration Guide')).toBe(true);
     });
 
     it('should display scoring help', () => {
       HelpManager.showHelp('scoring');
-      
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Scoring System')
-      );
+      expect(logContains('Scoring System')).toBe(true);
     });
 
     it('should display reporting help', () => {
       HelpManager.showHelp('reporting');
-      
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Reports and Output')
-      );
+      expect(logContains('Reports and Output')).toBe(true);
     });
 
     it('should display troubleshooting help', () => {
       HelpManager.showHelp('troubleshooting');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Troubleshooting')
-      );
+      expect(logContains('Troubleshooting')).toBe(true);
     });
 
     it('should display best-practices help', () => {
       HelpManager.showHelp('best-practices');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Best Practices')
-      );
+      expect(logContains('Best Practices')).toBe(true);
     });
 
     it('should display examples help', () => {
       HelpManager.showHelp('examples');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Practical Examples')
-      );
+      expect(logContains('Practical Examples')).toBe(true);
     });
 
     it('should display api help', () => {
       HelpManager.showHelp('api');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Integration & API')
-      );
+      expect(logContains('Integration & API')).toBe(true);
     });
 
     it('should handle invalid help topic gracefully', () => {
@@ -153,34 +132,20 @@ describe('HelpManager', () => {
       HelpManager.showTopicMenu();
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('A11Y Analyze Help Topics')
-      );
+      expect(logContains('A11Y Analyze Help Topics')).toBe(true);
       
       // Should display all topics
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('getting-started')
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('scanning')
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('crawling')
-      );
+      expect(logContains('getting-started')).toBe(true);
+      expect(logContains('scanning')).toBe(true);
+      expect(logContains('crawling')).toBe(true);
     });
 
     it('should show usage examples in topic menu', () => {
       HelpManager.showTopicMenu();
       
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Usage:')
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('a11yanalyze help <topic>')
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Examples:')
-      );
+      expect(logContains('Usage:')).toBe(true);
+      expect(logContains('a11yanalyze help <topic>')).toBe(true);
+      expect(logContains('Examples:')).toBe(true);
     });
   });
 
@@ -189,33 +154,23 @@ describe('HelpManager', () => {
       HelpManager.showQuickTips();
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Quick Tips:')
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Get started:')
-      );
+      expect(logContains('Quick Tips:')).toBe(true);
+      expect(logContains('Get started:')).toBe(true);
     });
 
     it('should show scan-specific tips', () => {
       HelpManager.showQuickTips('scan');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Quick Tips:')
-      );
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Start with:')
-      );
+      expect(logContains('Quick Tips:')).toBe(true);
+      expect(logContains('Start with:')).toBe(true);
     });
 
     it('should show crawl-specific tips', () => {
       HelpManager.showQuickTips('crawl');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Basic crawl:')
-      );
+      expect(logContains('Basic crawl:')).toBe(true);
     });
 
     it('should handle unknown command gracefully', () => {
@@ -232,9 +187,7 @@ describe('HelpManager', () => {
       HelpManager.searchHelp('scanning');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Search Results for "scanning"')
-      );
+      expect(logContains('Search Results for "scanning"')).toBe(true);
     });
 
     it('should find multiple matching topics', () => {
@@ -256,9 +209,7 @@ describe('HelpManager', () => {
       HelpManager.searchHelp('CRAWLING');
       
       expect(consoleSpy.log).toHaveBeenCalled();
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('Search Results')
-      );
+      expect(logContains('Search Results')).toBe(true);
     });
 
     it('should search in examples and descriptions', () => {
@@ -314,9 +265,7 @@ describe('HelpManager', () => {
       HelpManager.showHelp('scanning');
       
       // Should show formatted code examples
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('a11yanalyze scan')
-      );
+      expect(logContains('a11yanalyze scan')).toBe(true);
     });
 
     it('should include tips and warnings', () => {
@@ -330,17 +279,13 @@ describe('HelpManager', () => {
       HelpManager.showHelp('scanning');
       
       // Should include see-also section
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('See Also:')
-      );
+      expect(logContains('See Also:')).toBe(true);
     });
 
     it('should include practical examples', () => {
       HelpManager.showHelp('examples');
       
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('E-commerce')
-      );
+      expect(logContains('E-commerce')).toBe(true);
     });
 
     it('should format different code languages differently', () => {

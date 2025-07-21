@@ -50,6 +50,7 @@ interface CliScanOptions {
   exportErrors?: string;
   keyboardNav?: boolean;
   screenReaderSim?: boolean;
+  pageReadyTimeout?: string;
 }
 
 /**
@@ -186,22 +187,21 @@ class A11yAnalyzeCLI {
       };
 
       const pageScanner = new PageScanner(browserConfig, ruleEngineConfig);
+      // Parse CLI options
       const scanOptions = this.createScanOptions(options);
+      // Add support for pageReadyTimeout from CLI/config
+      scanOptions.pageReadyTimeout = options.pageReadyTimeout ? parseInt(options.pageReadyTimeout, 10) : 10000;
 
       this.consoleReporter.updatePhase('scanning', 'Analyzing page accessibility');
       this.consoleReporter.logPageScanStart(normalizedUrl, 1, 1);
 
       // Initialize and perform scan
       await pageScanner.initialize();
+      // Run the scan and get results
       const scanResult = await pageScanner.scan(normalizedUrl, scanOptions);
-      // Keyboard navigation automation
-      if (options.keyboardNav !== false) {
-        scanResult.keyboardNavigation = await simulateKeyboardNavigation(pageScanner['browserManager']['page']);
-      }
-      // Screen reader simulation
-      if (options.screenReaderSim !== false) {
-        scanResult.screenReaderSimulation = await simulateScreenReader(pageScanner['browserManager']['page']);
-      }
+
+      // Use keyboardNavigation and screenReaderSimulation from scanResult
+      // (No need to call simulateKeyboardNavigation or simulateScreenReader here)
       this.consoleReporter.logPageScanComplete(normalizedUrl, scanResult);
       this.consoleReporter.updatePhase('analyzing', 'Processing results and generating scores');
 
@@ -231,6 +231,24 @@ class A11yAnalyzeCLI {
         this.consoleReporter.logInfo(`Screen Reader Simulation: ${sr.summary.length} findings, ${sr.missingNames.length} missing names, ${sr.ambiguousRoles.length} ambiguous roles, ${sr.skippedElements.length} skipped elements.`);
         if (sr.summary.length > 0) {
           sr.summary.forEach(issue => this.consoleReporter.logWarning(issue));
+        }
+      }
+
+      // Print summary and grouped warnings
+      if (scanResult.summary) {
+        this.consoleReporter.logInfo(scanResult.summary.join(' | '));
+      }
+      if (scanResult.groupedWarnings) {
+        for (const [message, elements] of Object.entries(scanResult.groupedWarnings)) {
+          this.consoleReporter.logWarning(`${message} (${elements.length} occurrences)`);
+          // Add remediation tip for common warnings
+          if (message.includes('not reachable by Tab')) {
+            this.consoleReporter.logInfo('Remediation: Ensure the element is focusable and included in the tab order.');
+          } else if (message.includes('ambiguous or missing role')) {
+            this.consoleReporter.logInfo('Remediation: Add appropriate ARIA roles or use semantic HTML.');
+          } else if (message.includes('missing accessible name')) {
+            this.consoleReporter.logInfo('Remediation: Provide a descriptive accessible name using aria-label, aria-labelledby, or alt attributes.');
+          }
         }
       }
 
@@ -364,6 +382,7 @@ async function main(): Promise<void> {
     .option('--export-errors <file>', 'export error log to file')
     .option('--keyboard-nav', 'Enable keyboard navigation automation (default: true)', true)
     .option('--screen-reader-sim', 'Enable screen reader simulation (default: true)', true)
+    .option('--page-ready-timeout <ms>', 'timeout for page ready state in milliseconds (default: 10000)')
     .option('-v, --verbose', 'detailed output with progress information')
     .option('-q, --quiet', 'minimal output')
     .option('--debug', 'debug mode with detailed logging')
@@ -397,6 +416,7 @@ async function main(): Promise<void> {
     .option('--export-errors <file>', 'export error log to file')
     .option('--keyboard-nav', 'Enable keyboard navigation automation (default: true)', true)
     .option('--screen-reader-sim', 'Enable screen reader simulation (default: true)', true)
+    .option('--page-ready-timeout <ms>', 'timeout for page ready state in milliseconds (default: 10000)')
     .option('-v, --verbose', 'detailed output with progress information')
     .option('-q, --quiet', 'minimal output')
     .option('--debug', 'debug mode with detailed logging')
