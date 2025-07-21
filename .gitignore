@@ -47,3 +47,31 @@ playwright/.cache/
 # Temporary files
 *.tmp
 *.temp 
+
+# TypeScript
+*.tsbuildinfo
+
+# Jest
+jest-coverage/
+
+# Mac system files (if not already present)
+.AppleDouble
+.LSOverride
+
+# VSCode settings (already present, but ensure completeness)
+.history/
+
+# npm package lock backup
+package-lock.json.*
+
+# Optional: Ignore local configuration overrides
+*.local.js
+*.local.json
+
+# Optional: Ignore error and crash dumps
+*.pid
+*.seed
+*.pid.lock
+
+# Optional: Ignore coverage reports from other tools
+coverage-final.json 
