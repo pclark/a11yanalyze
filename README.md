@@ -1,6 +1,23 @@
 # A11Y Analyze – Accessibility Testing & VPAT Automation
 
-A11Y Analyze is a comprehensive CLI tool for automated and manual accessibility testing, VPAT/Section 508 reporting, and design system/component audits.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pclark/a11yanalyze/actions)
+[![Coverage Status](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](./coverage)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/badge/npm-latest-orange)](https://www.npmjs.com/package/a11yanalyze)
+
+---
+
+## 📑 Table of Contents
+- [Quickstart](#-quickstart)
+- [CLI Reference](#️-cli-reference)
+- [Common Workflows](#-common-workflows)
+- [Sample Reports](#-sample-reports)
+- [Testing Guide](#-testing-guide)
+- [Best Practices](#-best-practices)
+- [Integration](#-integration)
+- [Troubleshooting & FAQ](#-troubleshooting--faq)
+- [Resources](#-resources)
+- [Contributing](#contributing)
 
 ---
 
@@ -25,6 +42,7 @@ A11Y Analyze is a comprehensive CLI tool for automated and manual accessibility 
    ```bash
    a11yanalyze manual-guide "Button Component"
    ```
+   > **Tip:** After your first scan, use the [Manual Testing Guide](docs/manual-testing.md) to ensure real-world accessibility.
 
 5. **Generate Checklist**
    ```bash
@@ -43,6 +61,8 @@ A11Y Analyze is a comprehensive CLI tool for automated and manual accessibility 
 
 See `a11yanalyze <command> --help` for all options.
 
+> **See also:** [Testing Strategy](docs/testing.md) and [Manual Testing Guide](docs/manual-testing.md) for full testing instructions.
+
 ---
 
 ## 📋 Common Workflows
@@ -57,6 +77,8 @@ See `a11yanalyze <command> --help` for all options.
   `--template ./my-template.md`
 - **Checklist generation:**  
   `a11yanalyze generate-checklist ...`
+- **Manual review:**  
+  After any automated scan, review the [Manual Testing Guide](docs/manual-testing.md) for additional checks.
 
 ---
 
@@ -74,6 +96,25 @@ See `a11yanalyze <command> --help` for all options.
 - Run automated and manual tests as part of your workflow.
 - Review “Findings” sections for actionable issues.
 - Use the manual checklist for cognitive, focus, and content clarity checks.
+- **See the full [Testing Strategy](docs/testing.md) and [Manual Testing Guide](docs/manual-testing.md) for details.**
+
+### Example Test Output
+```sh
+$ npm test
+
+> a11yanalyze@0.1.0 test
+> jest
+
+ PASS  src/scanner/page-scanner.test.ts
+ PASS  src/output/json-reporter.test.ts
+ PASS  src/cli/config-manager.test.ts
+ ...
+Test Suites: 25 passed, 25 total
+Tests:       350 passed, 350 total
+Snapshots:   0 total
+Time:        12.345s
+Ran all test suites.
+```
 
 ---
 
@@ -83,6 +124,7 @@ See `a11yanalyze <command> --help` for all options.
 - Combine automated and manual testing.
 - Use VPAT/Section 508 reports for compliance and procurement.
 - Act on “Does Not Support” and “Partially Supports” findings.
+- **Encourage real user testing:** Always supplement automated/manual checks with feedback from people with disabilities.
 
 ---
 
@@ -96,16 +138,24 @@ See `a11yanalyze <command> --help` for all options.
 
 ## 🆘 Troubleshooting & FAQ
 
-- See the [Testing Guide](#) and [FAQ](#) for help.
-- For bugs or support, contact the accessibility team or open an issue.
+- See the [Testing Guide](docs/testing.md) and [FAQ](#) for help.
+- For bugs or support, contact the accessibility team or open an [issue](https://github.com/pclark/a11yanalyze/issues).
 
 ---
 
 ## 📚 Resources
 
+- [Testing Strategy for A11Y Analyze](docs/testing.md)
+- [Manual Accessibility Testing Guide](docs/manual-testing.md)
 - [WCAG 2.2 Quick Reference](https://www.w3.org/WAI/WCAG22/quickref/)
 - [Section 508 Guidelines](https://www.section508.gov/manage/laws-and-policies/)
 - [A11Y Project](https://www.a11yproject.com/)
+
+---
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, or open an [issue](https://github.com/pclark/a11yanalyze/issues) for bugs, feature requests, or questions.
 
 ---
 
