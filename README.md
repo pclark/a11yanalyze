@@ -153,6 +153,78 @@ Ran all test suites.
 
 ---
 
+## WCAG & Section 508 Coverage
+
+- **Automated Scanning:** This tool uses axe-core and custom rules to cover all testable criteria for:
+  - **WCAG 2.1** (A, AA, AAA)
+  - **WCAG 2.2** (including new 2.2 criteria)
+  - **Section 508** (mapped to WCAG 2.0/2.1 AA)
+- **VPAT Reporting:** Generates VPAT-style reports suitable for internal audits and procurement.
+- **Manual Review Required:** Some criteria (e.g., color use, cognitive accessibility, content clarity) require human judgment and are flagged for manual review in the report.
+- **Limitations:** Automated tools cannot fully assess all accessibility requirements. See the “Known Limitations” section for details.
+
+For a full mapping of automated vs. manual checks, see [docs/wcag-coverage.md](docs/wcag-coverage.md).
+
+---
+
+## How This Tool Compares to Other Accessibility Scanners
+
+This tool is built on the industry-standard **axe-core** engine, just like the most popular accessibility tools (axe DevTools, Pa11y, Accessibility Insights, Storybook a11y, etc.), ensuring high accuracy and coverage.
+
+| Feature/Tool         | This Tool       | axe DevTools | Pa11y | Lighthouse | Accessibility Insights | Storybook a11y |
+|----------------------|-----------------|--------------|-------|------------|-----------------------|----------------|
+| **axe-core engine**  | ✅              | ✅           | ✅    | Partial*   | ✅                    | ✅             |
+| **WCAG 2.1/2.2**     | ✅ (2.2)        | ✅ (2.2)     | ✅    | 2.1        | 2.1                   | 2.1            |
+| **Section 508**      | ✅ (mapped)     | ✅           | ✅    | ❌         | ✅                    | ❌             |
+| **VPAT reporting**   | ✅ (unique)     | ❌           | ❌    | ❌         | ❌                    | ❌             |
+| **Storybook batch**  | ✅ (unique)     | ❌           | ❌    | ❌         | ❌                    | Partial        |
+| **Component-level**  | ✅              | ❌           | ❌    | ❌         | ❌                    | ✅             |
+| **CLI/CI support**   | ✅              | Enterprise   | ✅    | ✅         | ✅                    | Partial        |
+| **Custom scoring**   | ✅              | ❌           | ❌    | Partial    | ❌                    | ❌             |
+| **Manual workflow**  | ✅ (checklists) | Partial      | ❌    | ❌         | Partial               | ❌             |
+| **Open source**      | ✅              | ❌           | ✅    | ✅         | ✅                    | ✅             |
+
+> *Lighthouse uses a subset of axe-core rules, not the full engine.
+
+### Unique Advantages
+- **VPAT/Section 508/508+ Reporting:** Out-of-the-box, human-friendly, and machine-readable reports for compliance and procurement.
+- **Storybook/Component Batch:** Scan all stories/components in a design system or library, not just pages.
+- **Custom Scoring & Profiles:** Weighted scoring, warnings, and compliance breakdowns.
+- **Manual/Hybrid Workflows:** Checklist generation, cognitive accessibility, and screen reader simulation.
+- **Modern CLI & Output:** Markdown, JSON, and console output with remediation tips and grouping.
+
+### What This Tool Reuses
+- **axe-core**: For all automated rules and WCAG mapping.
+- **Playwright**: For browser automation.
+- **Handlebars**: For templated, customizable reports.
+
+### What This Tool Adds
+- **VPAT/Section 508 mapping and reporting**
+- **Storybook integration and batch scanning**
+- **Advanced scoring and compliance summaries**
+- **Manual/interactive audit support**
+- **Comprehensive output formats and onboarding docs**
+
+---
+
+## ⚠️ Known Limitations
+
+- **Screen Reader Simulation:**
+  - The tool may report many elements with ambiguous or missing roles, especially on complex or highly dynamic sites. This is a known limitation of automated accessibility tree analysis and does not always indicate a real-world screen reader problem. Review these findings in context and supplement with manual testing.
+- **Crawling Edge Cases:**
+  - Some sites with heavy client-side routing, authentication, or non-standard navigation may not be fully crawled or analyzed. Adjust crawl depth, concurrency, and filtering options as needed.
+  - Pages requiring login, CAPTCHA, or special headers may not be accessible to the scanner.
+- **Experimental Features:**
+  - Some advanced features (e.g., cognitive accessibility analysis, keyboard simulation, custom rule integration) are experimental and may not cover all edge cases.
+- **Error Handling:**
+  - The tool aims to provide clear error messages and logs, but some rare network or browser errors may require manual investigation.
+- **VPAT/Section 508 Output:**
+  - Automated VPAT reports are a starting point. Always supplement with manual review and expert judgment for procurement or compliance.
+
+For more details or to report issues, see the [Troubleshooting & FAQ](#-troubleshooting--faq) or open an [issue](https://github.com/pclark/a11yanalyze/issues).
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, or open an [issue](https://github.com/pclark/a11yanalyze/issues) for bugs, feature requests, or questions.
