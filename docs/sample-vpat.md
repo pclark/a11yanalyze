@@ -1,4 +1,4 @@
-# TastySoft Design System VPAT2 Form 2025 - Button Component
+# Design System VPAT2 Form 2025 - Button Component
 
 | Criterion | Name | Status | Remarks/Explanations |
 |-----------|------|--------|----------------------|
