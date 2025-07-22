@@ -52,6 +52,7 @@
     "js-yaml": "^4.1.0",
     "node-fetch": "^3.3.2",
     "ora": "^8.2.0",
+    "p-limit": "^6.2.0",
     "playwright": "^1.40.1"
   },
   "devDependencies": {

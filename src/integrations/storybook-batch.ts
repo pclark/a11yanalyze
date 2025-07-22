@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import pLimit from 'p-limit';
 import { join } from 'path';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { PageScanner } from '../scanner/page-scanner';
@@ -13,6 +14,7 @@ export interface StorybookBatchOptions {
   timeout?: number;
   keyboardNav?: boolean;
   screenReaderSim?: boolean;
+  batchSize?: number;
 }
 
 export class StorybookBatchRunner {
@@ -27,33 +29,57 @@ export class StorybookBatchRunner {
     if (!existsSync(options.outputDir)) {
       mkdirSync(options.outputDir, { recursive: true });
     }
-    // 3. Scan each story and generate reports
+
+    // 3. Set concurrency limit
+    const limit = pLimit(options.batchSize ?? 5);
+
+    // 4. Run story scans in parallel
     const summary: any[] = [];
-    for (const story of stories) {
-      const scanResult = await this.scanStory(story.url, options);
-      const vpatReport = VpatReporter.generateJsonReport(story.name, scanResult);
-      const baseName = story.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      if (options.format === 'json' || options.format === 'both') {
-        const jsonPath = join(options.outputDir, `${baseName}.vpat.json`);
-        writeFileSync(jsonPath, JSON.stringify(vpatReport, null, 2), 'utf8');
-      }
-      if (options.format === 'markdown' || options.format === 'both') {
-        const mdPath = join(options.outputDir, `${baseName}.vpat.md`);
-        const md = VpatReporter.generateMarkdownReport(vpatReport);
-        writeFileSync(mdPath, md, 'utf8');
-      }
-      summary.push({
-        name: story.name,
-        url: story.url,
-        supports: vpatReport.summary.supports,
-        partiallySupports: vpatReport.summary.partiallySupports,
-        doesNotSupport: vpatReport.summary.doesNotSupport,
-        notApplicable: vpatReport.summary.notApplicable,
-        notEvaluated: vpatReport.summary.notEvaluated,
-      });
-    }
-    // 4. Write summary index
-    writeFileSync(join(options.outputDir, 'vpat-index.json'), JSON.stringify(summary, null, 2), 'utf8');
+
+    const scanTasks = stories.map(story =>
+        limit(async () => {
+          const startTime = performance.now();
+
+          const scanResult = await this.scanStory(story.url, options);
+          const vpatReport = VpatReporter.generateJsonReport(story.name, scanResult);
+          const baseName = story.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+          if (options.format === 'json' || options.format === 'both') {
+            const jsonPath = join(options.outputDir, `${baseName}.vpat.json`);
+            writeFileSync(jsonPath, JSON.stringify(vpatReport, null, 2), 'utf8');
+          }
+
+          if (options.format === 'markdown' || options.format === 'both') {
+            const mdPath = join(options.outputDir, `${baseName}.vpat.md`);
+            const md = VpatReporter.generateMarkdownReport(vpatReport);
+            writeFileSync(mdPath, md, 'utf8');
+          }
+
+          const endTime = performance.now();
+          console.info(`${story.name} scanned in ${(endTime - startTime).toFixed(1)}ms`);
+
+          summary.push({
+            name: story.name,
+            url: story.url,
+            supports: vpatReport.summary.supports,
+            partiallySupports: vpatReport.summary.partiallySupports,
+            doesNotSupport: vpatReport.summary.doesNotSupport,
+            notApplicable: vpatReport.summary.notApplicable,
+            notEvaluated: vpatReport.summary.notEvaluated,
+            durationMs: +(endTime - startTime).toFixed(1),
+          });
+        })
+    );
+
+    // Wait for all parallel scans to complete
+    await Promise.all(scanTasks);
+
+    // 5. Write summary index
+    writeFileSync(
+        join(options.outputDir, 'vpat-index.json'),
+        JSON.stringify(summary, null, 2),
+        'utf8'
+    );
   }
 
   async discoverStories(storybookUrl: string): Promise<{ name: string; url: string }[]> {
@@ -101,7 +127,7 @@ export class StorybookBatchRunner {
   }
 
   async scanStory(url: string, options: StorybookBatchOptions): Promise<ScanResult> {
-    console.info(`Scanning story: ${url}`, options);
+    console.info(`Scanning story: ${url}`);
     // Use the PageScanner with minimal config for now
     const pageScanner = new PageScanner(
       {
