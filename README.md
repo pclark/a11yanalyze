@@ -225,6 +225,29 @@ For more details or to report issues, see the [Troubleshooting & FAQ](#-troubles
 
 ---
 
+## Scanning Authenticated Pages
+
+Some web pages require login before they can be scanned for accessibility. This tool supports scanning authenticated pages by automating the login flow using Playwright.
+
+### How It Works
+- Use the CLI options `--login-url`, `--username`, and `--password` to provide login credentials.
+- The tool will:
+  1. Launch a browser and navigate to the login page.
+  2. Fill in the username and password fields.
+  3. Submit the login form and wait for navigation.
+  4. Use the authenticated session to scan the target page(s).
+
+### Example Usage
+```sh
+a11yanalyze scan --login-url https://example.com/login --username myuser --password mypass https://example.com/dashboard
+```
+
+- For more complex login flows (e.g., SSO, MFA), see the documentation for cookie/session injection or custom Playwright scripts.
+
+> This is the recommended approach for most teams. If you encounter issues with login, please consult the troubleshooting section or contact support.
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, or open an [issue](https://github.com/pclark/a11yanalyze/issues) for bugs, feature requests, or questions.

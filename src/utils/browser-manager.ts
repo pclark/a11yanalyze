@@ -268,6 +268,30 @@ export class BrowserManager extends EventEmitter {
   }
 
   /**
+   * Set storage state (cookies, localStorage, etc.) for the browser context
+   */
+  public async setStorageState(storageState: any): Promise<void> {
+    if (!this.browser) {
+      throw new Error('Browser not initialized. Call initialize() first.');
+    }
+    // Close existing context if any
+    if (this.context) {
+      await this.context.close();
+      this.context = null;
+    }
+    // Create new context with storage state
+    this.context = await this.browser.newContext({
+      viewport: this.config.viewport,
+      userAgent: this.config.userAgent,
+      ignoreHTTPSErrors: true,
+      javaScriptEnabled: true,
+      storageState,
+    });
+    this.context.setDefaultTimeout(this.config.timeout);
+    this.context.setDefaultNavigationTimeout(this.config.timeout);
+  }
+
+  /**
    * Set up comprehensive page event handlers
    * @private
    */

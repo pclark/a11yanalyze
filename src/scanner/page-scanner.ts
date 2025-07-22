@@ -887,4 +887,11 @@ export class PageScanner {
       console.warn('Error during PageScanner cleanup:', error);
     }
   }
+
+  /**
+   * Set storage state (cookies, localStorage, etc.) for the browser context
+   */
+  public async setStorageState(storageState: any): Promise<void> {
+    await this.browserManager.setStorageState(storageState);
+  }
 } 

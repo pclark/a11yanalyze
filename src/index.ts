@@ -147,7 +147,7 @@ class A11yAnalyzeCLI {
   /**
    * Handle single page scanning
    */
-  async scanPage(url: string, options: CliScanOptions): Promise<void> {
+  async scanPage(url: string, options: CliScanOptions & { loginUrl?: string; username?: string; password?: string }): Promise<void> {
     try {
       this.initializeReporters(options);
       this.consoleReporter.init();
@@ -191,6 +191,35 @@ class A11yAnalyzeCLI {
       const scanOptions = this.createScanOptions(options);
       // Add support for pageReadyTimeout from CLI/config
       scanOptions.pageReadyTimeout = options.pageReadyTimeout ? parseInt(options.pageReadyTimeout, 10) : 10000;
+
+      // --- Authenticated login flow ---
+      let loginContext = null;
+      if (options.loginUrl && options.username && options.password) {
+        const { chromium } = require('playwright');
+        const browser = await chromium.launch({ headless: true });
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        await page.goto(options.loginUrl, { timeout: browserConfig.timeout });
+        // Try common selectors for username and password fields
+        const usernameSelector = 'input[name="username"], input[type="email"], input[type="text"]';
+        const passwordSelector = 'input[name="password"], input[type="password"]';
+        await page.fill(usernameSelector, options.username);
+        await page.fill(passwordSelector, options.password);
+        // Try to submit the form
+        await Promise.all([
+          page.waitForNavigation({ timeout: browserConfig.timeout }),
+          page.keyboard.press('Enter'),
+        ]);
+        // Save storage state (cookies, localStorage)
+        const storageState = await context.storageState();
+        await browser.close();
+        loginContext = storageState;
+      }
+      // If login was performed, pass storageState to PageScanner
+      if (loginContext) {
+        await pageScanner.setStorageState(loginContext);
+      }
+      // --- End login flow ---
 
       this.consoleReporter.updatePhase('scanning', 'Analyzing page accessibility');
       this.consoleReporter.logPageScanStart(normalizedUrl, 1, 1);
@@ -386,7 +415,11 @@ async function main(): Promise<void> {
     .option('-v, --verbose', 'detailed output with progress information')
     .option('-q, --quiet', 'minimal output')
     .option('--debug', 'debug mode with detailed logging')
-    .action(async (url: string, options: CliScanOptions) => {
+    // New authentication options
+    .option('--login-url <url>', 'URL of the login page (for authenticated scans)')
+    .option('--username <username>', 'Username for login (for authenticated scans)')
+    .option('--password <password>', 'Password for login (for authenticated scans)')
+    .action(async (url: string, options: CliScanOptions & { loginUrl?: string; username?: string; password?: string }) => {
       await cli.scanPage(url, options);
     });
 
