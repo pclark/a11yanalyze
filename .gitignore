@@ -84,3 +84,11 @@ tasks/*.md
 
 # Ignore generated reports
 report.json 
+
+# Accessibility scan reports
+404-report.json
+example-report.json
+tastysoft-accordion-report.json
+wikipedia-report.json
+# Or, to ignore all scan report outputs
+*-report.json 
