@@ -6,6 +6,11 @@
 export type WCAGLevel = 'A' | 'AA' | 'AAA' | 'ARIA';
 export type WCAGPrinciple = 'perceivable' | 'operable' | 'understandable' | 'robust';
 
+type AxeConfigRule = {
+  id: string;
+  enabled: boolean;
+};
+
 export interface WCAGGuideline {
   id: string;
   title: string;
@@ -49,7 +54,7 @@ export interface RuleEngineConfig {
   disabledRules: string[];
   axeCoreConfig?: {
     tags: string[];
-    rules: Record<string, { enabled: boolean }>;
+    rules: Array<AxeConfigRule>;
   };
 }
 

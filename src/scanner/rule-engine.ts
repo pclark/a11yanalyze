@@ -20,7 +20,7 @@ export class RuleEngine {
       disabledRules: config.disabledRules ?? [],
       axeCoreConfig: config.axeCoreConfig ?? {
         tags: ['wcag2a', 'wcag2aa'],
-        rules: {},
+        rules: [],
       },
     };
     
@@ -74,7 +74,7 @@ export class RuleEngine {
 
     this.config.axeCoreConfig = {
       tags,
-      rules: this.config.axeCoreConfig?.rules ?? {},
+      rules: this.config.axeCoreConfig?.rules ?? [],
     };
   }
 
@@ -150,9 +150,11 @@ export class RuleEngine {
       if (!config) {
         throw new Error('axeCoreConfig is not defined');
       }
+
+      console.info('Axe-core configuration:', config);
       // Ensure rules is always an object
-      if (!config.rules || Array.isArray(config.rules)) {
-        config.rules = {};
+      if (typeof config.rules !== 'object' || config.rules == undefined) {
+        config.rules = [];
       }
       const axeResults = await page.evaluate((configParam: any) => {
         return new Promise((resolve, reject) => {

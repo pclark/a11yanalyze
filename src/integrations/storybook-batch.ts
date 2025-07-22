@@ -4,8 +4,6 @@ import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { PageScanner } from '../scanner/page-scanner';
 import { VpatReporter } from '../output/vpat-reporter';
 import { ScanResult } from '../types';
-import { simulateKeyboardNavigation } from '../scanner/page-scanner';
-import { simulateScreenReader } from '../scanner/page-scanner';
 
 export interface StorybookBatchOptions {
   storybookUrl: string;
@@ -19,6 +17,7 @@ export interface StorybookBatchOptions {
 
 export class StorybookBatchRunner {
   async run(options: StorybookBatchOptions): Promise<void> {
+    console.info('Running storybook batch');
     // 1. Discover stories
     const stories = await this.discoverStories(options.storybookUrl);
     if (!stories.length) {
@@ -58,28 +57,51 @@ export class StorybookBatchRunner {
   }
 
   async discoverStories(storybookUrl: string): Promise<{ name: string; url: string }[]> {
-    // Try to fetch /stories.json (Storybook 6+)
+    const baseUrl = storybookUrl.replace(/\/$/, '');
+    const storiesJsonUrl = `${baseUrl}/index.json`;
+    console.info(`Discovering stories in Storybook at ${storiesJsonUrl}`);
+    // Try Storybook 7+ index.json first
     try {
-      const res = await fetch(`${storybookUrl.replace(/\/$/, '')}/stories.json`);
+      const res = await fetch(storiesJsonUrl);
       if (res.ok) {
         const data = await res.json();
-        // Type guard for 'data' before accessing data.stories
+        // Storybook 7+ index.json shape: { stories: { [id]: { ... } } }
+        if (typeof data === 'object' && data !== null && 'entries' in data) {
+          // Only include items of type 'story'
+          return Object.values((data as any).entries)
+              .filter((story: any) => story.type === 'story')
+              .map((story: any) => ({
+                name: story.name || story.id,
+                url: `${baseUrl}/iframe.html?id=${story.id}`,
+              }));
+        }
+      }
+    } catch (e) {
+      // Ignore and try stories.json fallback
+      console.warn('Error finding Stories via index.json', e);
+    }
+    // Fallback to Storybook 6 stories.json
+    try {
+      const res = await fetch(`${baseUrl}/stories.json`);
+      if (res.ok) {
+        const data = await res.json();
         if (typeof data === 'object' && data !== null && 'stories' in data) {
-          // Now safe to access data.stories
           return Object.values((data as any).stories).map((story: any) => ({
             name: story.name || story.id,
-            url: `${storybookUrl.replace(/\/$/, '')}/iframe.html?id=${story.id}`,
+            url: `${baseUrl}/iframe.html?id=${story.id}`,
           }));
         }
       }
     } catch (e) {
       // Fallback to crawling sidebar or other methods in future
+      console.warn('Error finding Stories via stories.json', e);
     }
     // If not found, return empty for now
     return [];
   }
 
   async scanStory(url: string, options: StorybookBatchOptions): Promise<ScanResult> {
+    console.info(`Scanning story: ${url}`, options);
     // Use the PageScanner with minimal config for now
     const pageScanner = new PageScanner(
       {
