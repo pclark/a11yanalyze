@@ -59,7 +59,8 @@ export async function simulateKeyboardNavigation(page: Page): Promise<KeyboardNa
       isVisible: !!(e as HTMLElement).offsetParent,
       isDisabled: (e as HTMLInputElement).disabled || false,
       isContentEditable: (e as HTMLElement).isContentEditable,
-      isFocusable: true
+      isFocusable: true,
+      ariaHidden: (e as HTMLElement).getAttribute('aria-hidden') === 'true',
     }));
   });
   // Find all interactable elements (clickable, input, button, etc.)
@@ -76,9 +77,13 @@ export async function simulateKeyboardNavigation(page: Page): Promise<KeyboardNa
       isVisible: !!(e as HTMLElement).offsetParent,
       isDisabled: (e as HTMLInputElement).disabled || false,
       isContentEditable: (e as HTMLElement).isContentEditable,
-      isFocusable: false
+      isFocusable: false,
+      ariaHidden: (e as HTMLElement).getAttribute('aria-hidden') === 'true',
     }));
   });
+  // Filter out aria-hidden elements from focusable/interactable arrays
+  const visibleFocusable = focusable.filter(e => !e.ariaHidden);
+  const visibleInteractable = interactable.filter(e => !e.ariaHidden);
   const tabOrder: string[] = [];
   const unreachableElements: string[] = [];
   const focusTraps: string[] = [];
@@ -92,7 +97,7 @@ export async function simulateKeyboardNavigation(page: Page): Promise<KeyboardNa
   let lastFocused = '';
   let focusCycle = new Set<string>();
   let lastDomIndex = -1;
-  for (let i = 0; i < focusable.length + 10; i++) { // +10 to detect cycles
+  for (let i = 0; i < visibleFocusable.length + 10; i++) { // +10 to detect cycles
     await page.keyboard.press('Tab');
     const active = await page.evaluate(() => {
       const el = document.activeElement;
@@ -138,22 +143,22 @@ export async function simulateKeyboardNavigation(page: Page): Promise<KeyboardNa
     }
   }
   // Detect unreachable elements
-  for (const el of focusable) {
+  for (const el of visibleFocusable) {
     if (!tabOrder.some(sel => el.html.includes(sel))) {
       unreachableElements.push(el.html);
       issues.push(`Element not reachable by Tab: ${el.html}`);
     }
   }
   // Detect focusable but not interactable
-  for (const el of focusable) {
-    if (!interactable.some(i => i.html === el.html)) {
+  for (const el of visibleFocusable) {
+    if (!visibleInteractable.some(i => i.html === el.html)) {
       notInteractable.push(el.html);
       issues.push(`Focusable but not interactable: ${el.html}`);
     }
   }
   // Detect interactable but not focusable
-  for (const el of interactable) {
-    if (!focusable.some(f => f.html === el.html)) {
+  for (const el of visibleInteractable) {
+    if (!visibleFocusable.some(f => f.html === el.html)) {
       notFocusable.push(el.html);
       issues.push(`Interactable but not focusable: ${el.html}`);
     }
