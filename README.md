@@ -248,6 +248,17 @@ a11yanalyze scan --login-url https://example.com/login --username myuser --passw
 
 ---
 
+## System Requirements
+
+- **Node.js**: >=16.0.0
+- **npm**: >=7.0.0
+- **Playwright**: Browser binaries are automatically downloaded on first install
+- **Supported OS**: macOS, Linux, Windows
+
+> To check your Node version, run `node -v`. To check npm, run `npm -v`.
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, or open an [issue](https://github.com/pclark/a11yanalyze/issues) for bugs, feature requests, or questions.
