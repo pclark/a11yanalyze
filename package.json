@@ -32,8 +32,12 @@
     "audit",
     "compliance"
   ],
-  "author": "Your Name",
+  "author": "Phillip Clark <philc_npm@users.noreply.npmjs.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pclark/a11yanalyze.git"
+  },
   "dependencies": {
     "ajv": "^8.17.1",
     "axe-core": "^4.8.4",
