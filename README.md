@@ -8,6 +8,7 @@
 ---
 
 ## 📑 Table of Contents
+- [System Requirements](#system-requirements)
 - [Quickstart](#-quickstart)
 - [CLI Reference](#️-cli-reference)
 - [Common Workflows](#-common-workflows)
@@ -17,6 +18,10 @@
 - [Integration](#-integration)
 - [Troubleshooting & FAQ](#-troubleshooting--faq)
 - [Resources](#-resources)
+- [WCAG & Section 508 Coverage](#wcag--section-508-coverage)
+- [How This Tool Compares to Other Accessibility Scanners](#how-this-tool-compares-to-other-accessibility-scanners)
+- [Known Limitations](#️-known-limitations)
+- [Scanning Authenticated Pages](#scanning-authenticated-pages)
 - [Contributing](#contributing)
 
 ---
