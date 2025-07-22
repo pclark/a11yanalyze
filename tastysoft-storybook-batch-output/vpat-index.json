@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Introduction",
+    "url": "https://tastysoft.io/storybook/iframe.html?id=about-this-library--introduction",
+    "supports": 0,
+    "partiallySupports": 0,
+    "doesNotSupport": 1,
+    "notApplicable": 0,
+    "notEvaluated": 0
+  },
+  {
+    "name": "Contributing",
+    "url": "https://tastysoft.io/storybook/iframe.html?id=about-this-library--contributing",
+    "supports": 0,
+    "partiallySupports": 0,
+    "doesNotSupport": 2,
+    "notApplicable": 0,
+    "notEvaluated": 0
+  }
+]

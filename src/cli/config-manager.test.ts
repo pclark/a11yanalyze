@@ -15,6 +15,7 @@ jest.mock('fs', () => ({
   unlinkSync: jest.fn(),
   mkdirSync: jest.fn(),
   rmSync: jest.fn(),
+  renameSync: jest.fn(), // Add this line
 }));
 
 jest.mock('path', () => ({
@@ -116,59 +117,46 @@ describe('ConfigManager', () => {
     });
 
     it('should load JavaScript configuration file', async () => {
-      const configPath = '/test/.a11yanalyzerc.js';
-      
-      mockFs.existsSync.mockImplementation((path: string) => 
-        path === configPath
-      );
-
-      // Mock require for JS config
-      const mockConfig = {
-        scanning: { wcagLevel: 'A' },
-        browser: { headless: false },
-      };
-      
-      const originalRequire = require;
-      (global as any).require = jest.fn().mockImplementation((path: string) => {
-        if (path === configPath) return mockConfig;
-        return originalRequire(path);
-      });
-
-             // Mock require.cache and require.resolve
-       require.cache = {};
-       (require.resolve as any) = jest.fn().mockReturnValue(configPath);
-
+      jest.resetModules();
+      jest.unmock('fs');
+      jest.unmock('path');
+      const fs = jest.requireActual('fs');
+      const path = jest.requireActual('path');
+      // Re-require ConfigManager after unmocking fs and path
+      const { ConfigManager: RealConfigManager } = require('./config-manager');
+      const configManager = new RealConfigManager();
+      // Write a real JS config file to disk so require can load it
+      const configPath = path.join(process.cwd(), '.a11yanalyzerc.js');
+      const configContent = `module.exports = { scanning: { wcagLevel: 'A' }, browser: { headless: false } };`;
+      fs.writeFileSync(configPath, configContent, 'utf8');
+      // Temporarily rename .a11yanalyzerc.json if it exists
+      const jsonPath = path.join(process.cwd(), '.a11yanalyzerc.json');
+      const jsonBackupPath = path.join(process.cwd(), '.a11yanalyzerc.json.bak');
+      let jsonExisted = false;
+      if (fs.existsSync(jsonPath)) {
+        fs.renameSync(jsonPath, jsonBackupPath);
+        jsonExisted = true;
+      }
+      const originalCwd = process.cwd;
+      process.cwd = () => process.cwd(); // Use real cwd
       try {
-        const result = await configManager.loadConfig(['/test']);
-
+        const result = await configManager.loadConfig();
         expect(result.config.scanning.wcagLevel).toBe('A');
         expect(result.config.browser.headless).toBe(false);
       } finally {
-        (global as any).require = originalRequire;
+        fs.unlinkSync(configPath);
+        if (jsonExisted) {
+          fs.renameSync(jsonBackupPath, jsonPath);
+        }
+        process.cwd = originalCwd;
       }
     });
 
     it('should load configuration from package.json', async () => {
-      const packageData = {
-        name: 'test-project',
-        a11yanalyze: {
-          scanning: {
-            wcagLevel: 'AAA',
-            includeAAA: true,
-          },
-          scoring: {
-            profile: 'strict',
-          },
-        },
-      };
-
-      mockFs.existsSync.mockImplementation((path: string) => 
-        path.includes('package.json')
-      );
-      mockFs.readFileSync.mockReturnValue(JSON.stringify(packageData));
-
+      mockFs.existsSync.mockImplementation((path: string) => path.includes('package.json'));
+      mockFs.readFileSync.mockReturnValue('{ "name": "test", "a11yanalyze": { "scanning": { "wcagLevel": "AAA", "includeAAA": true }, "scoring": { "profile": "strict" } } }');
+      mockPath.resolve.mockImplementation((...args: string[]) => args.join('/'));
       const result = await configManager.loadConfig();
-
       expect(result.config.scanning.wcagLevel).toBe('AAA');
       expect(result.config.scanning.includeAAA).toBe(true);
       expect(result.config.scoring.profile).toBe('strict');

@@ -42,6 +42,8 @@
    ```bash
    a11yanalyze storybook-batch --storybook-url http://localhost:6006 --output-dir ./vpat-reports --format both
    ```
+   > **Supports Storybook 7+ (index.json) and falls back to stories.json for older versions.**
+   > If you see "No stories found in Storybook instance.", check that your Storybook is running, accessible, and that /index.json or /stories.json endpoints are available. For composed Storybooks, ensure refs are loaded.
 
 4. **Manual Audit**
    ```bash

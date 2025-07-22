@@ -388,7 +388,7 @@ export class ConfigManager {
 
       // 4. Apply CLI options (highest priority)
       const cliConfig = this.convertCliToConfig(cliOptions);
-      if (cliConfig.config) {
+      if (cliConfig.config && Object.keys(cliConfig.config).length > 0) {
         config = this.mergeConfigs(config, cliConfig.config);
         this.addConfigSource('cli', 3, true);
       }
@@ -497,15 +497,23 @@ export class ConfigManager {
     // Build search paths
     const paths = [
       ...searchPaths,
-      process.cwd(),
-      homedir(),
     ];
-
+    try {
+      paths.push(process.cwd());
+    } catch (err) {
+      // console.error('[DEBUG] Error in process.cwd():', err);
+    }
+    // try {
+    //   paths.push(homedir());
+    //   console.log('[DEBUG] after homedir:', paths);
+    // } catch (err) {
+    //   console.error('[DEBUG] Error in homedir():', err);
+    // }
     for (const basePath of paths) {
       for (const filename of ConfigManager.CONFIG_FILENAMES) {
         const configPath = resolve(basePath, filename);
-        
-        if (existsSync(configPath)) {
+        const exists = existsSync(configPath);
+        if (exists) {
           try {
             const config = await this.loadConfigFile(configPath);
             return { config, path: configPath, warnings, errors };
@@ -529,9 +537,14 @@ export class ConfigManager {
     if (path.endsWith('.json')) {
       return JSON.parse(content);
     } else if (path.endsWith('.js')) {
-      // For .js files, use dynamic import or require
-      delete require.cache[require.resolve(path)];
-      return require(path);
+      try {
+        delete require.cache[require.resolve(path)];
+        const jsConfig = require(path);
+        return jsConfig;
+      } catch (err) {
+        // console.error('[DEBUG] Error loading JS config:', err);
+        throw err;
+      }
     } else if (path.endsWith('.yaml') || path.endsWith('.yml')) {
       return yaml.load(content) as Partial<A11yAnalyzeConfig>;
     } else if (path.includes('package.json')) {
@@ -588,52 +601,39 @@ export class ConfigManager {
   }
 
   /**
-   * Convert CLI options to configuration structure
-   * @private
+   * Convert CLI options to config structure, parsing types as needed
    */
-  private convertCliToConfig(cliOptions: Record<string, any>): {
-    config?: Partial<A11yAnalyzeConfig>;
-  } {
+  private convertCliToConfig(cliOptions: any): { config?: Partial<A11yAnalyzeConfig> } {
     const config: any = {};
+    if (!cliOptions) return { config };
 
-    // Map CLI options to config structure
-    const mappings: Record<string, string> = {
-      'wcagLevel': 'scanning.wcagLevel',
-      'includeAaa': 'scanning.includeAAA',
-      'includeAria': 'scanning.includeARIA',
-      'timeout': 'scanning.timeout',
-      'viewport': 'browser.viewport',
-      'depth': 'crawling.maxDepth',
-      'maxPages': 'crawling.maxPages',
-      'concurrency': 'crawling.maxConcurrency',
-      'format': 'output.format',
-      'verbose': 'output.verbose',
-      'quiet': 'output.quiet',
-      'debug': 'output.debug',
-      'output': 'output.outputPath',
-      'exportErrors': 'output.exportErrors',
-      'profile': 'scoring.profile',
-      'minSeverity': 'scoring.minSeverity',
-      'screenshot': 'scanning.captureScreenshots',
-    };
+    // Scanning options
+    if (cliOptions.wcagLevel) config.scanning = { ...config.scanning, wcagLevel: cliOptions.wcagLevel };
+    if (cliOptions.includeAaa !== undefined) config.scanning = { ...config.scanning, includeAAA: Boolean(cliOptions.includeAaa) };
+    if (cliOptions.includeAria !== undefined) config.scanning = { ...config.scanning, includeARIA: Boolean(cliOptions.includeAria) };
+    if (cliOptions.timeout !== undefined) config.scanning = { ...config.scanning, timeout: typeof cliOptions.timeout === 'string' ? parseInt(cliOptions.timeout, 10) : cliOptions.timeout };
 
-    for (const [cliKey, configPath] of Object.entries(mappings)) {
-      const value = cliOptions[cliKey];
-      if (value !== undefined) {
-        if (cliKey === 'viewport' && typeof value === 'string') {
-          // Parse viewport string like "1280x720"
-          const match = value.match(/^(\d+)x(\d+)$/);
-          if (match && match[1] && match[2]) {
-            this.setNestedValue(config, 'browser.viewport.width', parseInt(match[1], 10));
-            this.setNestedValue(config, 'browser.viewport.height', parseInt(match[2], 10));
-          }
-        } else {
-          this.setNestedValue(config, configPath, value);
-        }
-      }
+    // Browser options
+    if (cliOptions.headless !== undefined) config.browser = { ...config.browser, headless: Boolean(cliOptions.headless) };
+    if (cliOptions.viewport) {
+      const [width, height] = typeof cliOptions.viewport === 'string' && cliOptions.viewport.includes('x')
+        ? cliOptions.viewport.split('x').map(Number)
+        : [1280, 720];
+      config.browser = { ...config.browser, viewport: { width, height } };
     }
 
-    return { config: Object.keys(config).length > 0 ? config : undefined };
+    // Output options
+    if (cliOptions.format) config.output = { ...config.output, format: cliOptions.format };
+    if (cliOptions.verbose !== undefined) config.output = { ...config.output, verbose: Boolean(cliOptions.verbose) };
+    if (cliOptions.quiet !== undefined) config.output = { ...config.output, quiet: Boolean(cliOptions.quiet) };
+    if (cliOptions.debug !== undefined) config.output = { ...config.output, debug: Boolean(cliOptions.debug) };
+
+    // Scoring options
+    if (cliOptions.profile) config.scoring = { ...config.scoring, profile: cliOptions.profile };
+
+    // Add more CLI options as needed...
+
+    return { config };
   }
 
   /**
@@ -695,15 +695,6 @@ export class ConfigManager {
   }
 
   /**
-   * Merge two configuration objects deeply
-   * @private
-   */
-  private mergeConfigs(base: A11yAnalyzeConfig, override: Partial<A11yAnalyzeConfig>): A11yAnalyzeConfig {
-    const result = this.deepClone(base);
-    return this.deepMerge(result, override);
-  }
-
-  /**
    * Deep clone an object
    * @private
    */
@@ -739,6 +730,14 @@ export class ConfigManager {
       }
     }
     return target;
+  }
+
+  /**
+   * Merge two configs so that custom overrides default
+   */
+  private mergeConfigs(base: any, override: any): any {
+    // base: default config, override: custom config
+    return this.deepMerge(this.deepClone(base), override);
   }
 
   /**
