@@ -513,26 +513,25 @@ export class UrlValidator {
    * @private
    */
   private generateSuggestions(input: string): string[] {
+    if (!input || typeof input !== 'string') {
+      return [];
+    }
     const suggestions: string[] = [];
-    
     // Check for common typos
     for (const [typo, correction] of UrlValidator.COMMON_TYPOS) {
       if (input.includes(typo)) {
         suggestions.push(input.replace(typo, correction));
       }
     }
-
     // Add protocol if missing
     if (!input.match(/^[a-z][a-z0-9+.-]*:/i)) {
       suggestions.push(`https://${input}`);
       suggestions.push(`http://${input}`);
     }
-
     // Add www if it looks like a domain
     if (!input.includes('://') && input.includes('.') && !input.startsWith('www.')) {
       suggestions.push(`https://www.${input}`);
     }
-
     // Remove duplicates
     return [...new Set(suggestions)];
   }

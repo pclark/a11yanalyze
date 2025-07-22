@@ -29,7 +29,7 @@ describe('RuleEngine', () => {
       disabledRules: [],
       axeCoreConfig: {
         tags: ['wcag2a', 'wcag2aa'],
-        rules: {},
+        rules: [],
       },
     };
 
@@ -57,7 +57,7 @@ describe('RuleEngine', () => {
         disabledRules: ['rule1'],
         axeCoreConfig: {
           tags: ['wcag2aaa'],
-          rules: {},
+          rules: [],
         },
       };
 

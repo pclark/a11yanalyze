@@ -130,8 +130,8 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors('error');
       expect(errors).toHaveLength(1);
-      expect(errors[0].details).toBe('Test error');
-      expect(errors[0].stack).toBeTruthy();
+      expect(errors[0]!.details).toBe('Test error');
+      expect(errors[0]!.stack).toBeTruthy();
     });
 
     it('should log fatal errors', () => {
@@ -143,7 +143,7 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors('fatal');
       expect(errors).toHaveLength(1);
-      expect(errors[0].level).toBe('fatal');
+      expect(errors[0]!.level).toBe('fatal');
     });
   });
 
@@ -198,11 +198,11 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].category).toBe('browser');
-      expect(errors[0].source).toBe('browser-manager');
-      expect(errors[0].url).toBe('https://example.com');
-      expect(errors[0].recoveryAction).toBe('Restarted browser');
-      expect(errors[0].recovered).toBe(true);
+      expect(errors[0]!.category).toBe('browser');
+      expect(errors[0]!.source).toBe('browser-manager');
+      expect(errors[0]!.url).toBe('https://example.com');
+      expect(errors[0]!.recoveryAction).toBe('Restarted browser');
+      expect(errors[0]!.recovered).toBe(true);
     });
 
     it('should log network errors with response codes', () => {
@@ -211,9 +211,9 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].category).toBe('network');
-      expect(errors[0].source).toBe('network');
-      expect(errors[0].context?.responseCode).toBe(504);
+      expect(errors[0]!.category).toBe('network');
+      expect(errors[0]!.source).toBe('network');
+      expect(errors[0]!.context?.responseCode).toBe(504);
     });
 
     it('should log scanning errors with scan phase', () => {

@@ -36,7 +36,7 @@ describe('IssueProcessor', () => {
       const enhancedIssues = await issueProcessor.processIssues([issue]);
 
       expect(enhancedIssues).toHaveLength(1);
-      const enhanced = enhancedIssues[0];
+      const enhanced = enhancedIssues[0]!;
 
       expect(enhanced.wcagCriterion).toBeDefined();
       expect(enhanced.wcagCriterion?.number).toBe('1.1.1');
@@ -55,9 +55,9 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues(issues);
 
-      expect(enhancedIssues[0].id).toBe('high'); // Critical first
-      expect(enhancedIssues[1].id).toBe('medium'); // Serious second
-      expect(enhancedIssues[2].id).toBe('low'); // Minor last
+      expect(enhancedIssues[0]!.id).toBe('high'); // Critical first
+      expect(enhancedIssues[1]!.id).toBe('medium'); // Serious second
+      expect(enhancedIssues[2]!.id).toBe('low'); // Minor last
     });
 
     it('should handle issues without WCAG database entries gracefully', async () => {
@@ -68,8 +68,8 @@ describe('IssueProcessor', () => {
       const enhancedIssues = await issueProcessor.processIssues([issue]);
 
       expect(enhancedIssues).toHaveLength(1);
-      expect(enhancedIssues[0].wcagCriterion).toBeUndefined();
-      expect(enhancedIssues[0].priorityScore).toBeGreaterThan(0);
+      expect(enhancedIssues[0]!.wcagCriterion).toBeUndefined();
+      expect(enhancedIssues[0]!.priorityScore).toBeGreaterThan(0);
     });
 
     it('should apply processing options correctly', async () => {
@@ -81,7 +81,7 @@ describe('IssueProcessor', () => {
       };
 
       const enhancedIssues = await issueProcessor.processIssues([issue], options);
-      const enhanced = enhancedIssues[0];
+      const enhanced = enhancedIssues[0]!;
 
       expect(enhanced.contextualRemediation).toBeUndefined();
       expect(enhanced.testingGuidance).toBeUndefined();
@@ -95,7 +95,7 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([critical, minor]);
 
-      expect(enhancedIssues[0].priorityScore).toBeGreaterThan(enhancedIssues[1].priorityScore!);
+      expect(enhancedIssues[0]!.priorityScore).toBeGreaterThan(enhancedIssues[1]!.priorityScore!);
     });
 
     it('should prioritize Level A issues over AAA', async () => {
@@ -104,7 +104,7 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([levelA, levelAAA]);
 
-      expect(enhancedIssues[0].priorityScore).toBeGreaterThan(enhancedIssues[1].priorityScore!);
+      expect(enhancedIssues[0]!.priorityScore).toBeGreaterThan(enhancedIssues[1]!.priorityScore!);
     });
 
     it('should adjust scoring based on priority mode', async () => {
@@ -113,7 +113,7 @@ describe('IssueProcessor', () => {
       const impactMode = await issueProcessor.processIssues([issue], { priorityMode: 'impact' });
       const severityMode = await issueProcessor.processIssues([issue], { priorityMode: 'severity' });
 
-      expect(impactMode[0].priorityScore).not.toEqual(severityMode[0].priorityScore);
+      expect(impactMode[0]!.priorityScore).not.toEqual(severityMode[0]!.priorityScore);
     });
   });
 
@@ -126,7 +126,7 @@ describe('IssueProcessor', () => {
       });
 
       const enhancedIssues = await issueProcessor.processIssues([formIssue]);
-      const remediation = enhancedIssues[0].contextualRemediation;
+      const remediation = enhancedIssues[0]!.contextualRemediation;
 
       expect(remediation).toBeDefined();
       expect(remediation?.steps.some(step => 
@@ -143,7 +143,7 @@ describe('IssueProcessor', () => {
       });
 
       const enhancedIssues = await issueProcessor.processIssues([buttonIssue]);
-      const remediation = enhancedIssues[0].contextualRemediation;
+      const remediation = enhancedIssues[0]!.contextualRemediation;
 
       expect(remediation).toBeDefined();
       expect(remediation?.steps.some(step => 
@@ -159,7 +159,7 @@ describe('IssueProcessor', () => {
         maxCodeExamples: 2,
       });
 
-      const remediation = enhancedIssues[0].contextualRemediation;
+      const remediation = enhancedIssues[0]!.contextualRemediation;
       expect(remediation?.codeExamples).toBeDefined();
       expect(remediation?.codeExamples.length).toBeLessThanOrEqual(2);
     });
@@ -170,8 +170,8 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([criticalIssue, minorIssue]);
 
-      expect(enhancedIssues[0].contextualRemediation?.urgency).toBe('immediate');
-      expect(enhancedIssues[1].contextualRemediation?.urgency).toBe('low');
+      expect(enhancedIssues[0]!.contextualRemediation?.urgency).toBe('immediate');
+      expect(enhancedIssues[1]!.contextualRemediation?.urgency).toBe('low');
     });
   });
 
@@ -182,15 +182,15 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([altTextIssue, contrastIssue]);
 
-      expect(enhancedIssues[0].impactAssessment?.usersAffected).toBe(15); // Alt text impact
-      expect(enhancedIssues[1].impactAssessment?.usersAffected).toBe(25); // Contrast impact
+      expect(enhancedIssues[0]!.impactAssessment?.usersAffected).toBe(15); // Alt text impact
+      expect(enhancedIssues[1]!.impactAssessment?.usersAffected).toBe(25); // Contrast impact
     });
 
     it('should identify assistive technology impact', async () => {
       const keyboardIssue = createMockIssue({ wcagReference: '2.1.1' });
 
       const enhancedIssues = await issueProcessor.processIssues([keyboardIssue]);
-      const impact = enhancedIssues[0].impactAssessment;
+      const impact = enhancedIssues[0]!.impactAssessment;
 
       expect(impact?.assistiveTechImpact).toContain('Keyboard users');
       expect(impact?.assistiveTechImpact).toContain('Switch devices');
@@ -202,15 +202,15 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([criticalA, minorAAA]);
 
-      expect(enhancedIssues[0].impactAssessment?.complianceRisk).toBe('high');
-      expect(enhancedIssues[1].impactAssessment?.complianceRisk).toBe('low');
+      expect(enhancedIssues[0]!.impactAssessment?.complianceRisk).toBe('high');
+      expect(enhancedIssues[1]!.impactAssessment?.complianceRisk).toBe('low');
     });
 
     it('should generate business impact descriptions', async () => {
       const highImpactIssue = createMockIssue({ wcagReference: '1.4.3' }); // 25% users affected
 
       const enhancedIssues = await issueProcessor.processIssues([highImpactIssue]);
-      const businessImpact = enhancedIssues[0].impactAssessment?.businessImpact;
+      const businessImpact = enhancedIssues[0]!.impactAssessment?.businessImpact;
 
       expect(businessImpact).toContain('High impact');
       expect(businessImpact).toContain('significant portion');
@@ -224,8 +224,8 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([simpleIssue, complexIssue]);
 
-      expect(enhancedIssues[0].complexity?.level).toBe('simple');
-      expect(enhancedIssues[1].complexity?.level).toBe('complex');
+      expect(enhancedIssues[0]!.complexity?.level).toBe('simple');
+      expect(enhancedIssues[1]!.complexity?.level).toBe('complex');
     });
 
     it('should adjust complexity for custom components', async () => {
@@ -235,7 +235,7 @@ describe('IssueProcessor', () => {
       });
 
       const enhancedIssues = await issueProcessor.processIssues([customComponentIssue]);
-      const complexity = enhancedIssues[0].complexity;
+      const complexity = enhancedIssues[0]!.complexity;
 
       expect(complexity?.skillsRequired).toContain('Component architecture');
       expect(complexity?.riskLevel).toBe('medium');
@@ -248,7 +248,7 @@ describe('IssueProcessor', () => {
       });
 
       const enhancedIssues = await issueProcessor.processIssues([jsIssue]);
-      const complexity = enhancedIssues[0].complexity;
+      const complexity = enhancedIssues[0]!.complexity;
 
       expect(complexity?.skillsRequired).toContain('JavaScript');
     });
@@ -257,7 +257,7 @@ describe('IssueProcessor', () => {
       const issue = createMockIssue({ wcagReference: '1.1.1' });
 
       const enhancedIssues = await issueProcessor.processIssues([issue]);
-      const complexity = enhancedIssues[0].complexity;
+      const complexity = enhancedIssues[0]!.complexity;
 
       expect(complexity?.estimatedTime).toBeDefined();
       expect(complexity?.estimatedTime).toMatch(/\d+/); // Contains numbers
@@ -272,7 +272,7 @@ describe('IssueProcessor', () => {
         includeTestingGuidance: true,
       });
 
-      const testing = enhancedIssues[0].testingGuidance;
+      const testing = enhancedIssues[0]!.testingGuidance;
       expect(testing).toBeDefined();
       expect(testing?.quickTests).toBeDefined();
       expect(testing?.automatedTools).toBeDefined();
@@ -286,7 +286,7 @@ describe('IssueProcessor', () => {
         includeTestingGuidance: true,
       });
 
-      const quickTests = enhancedIssues[0].testingGuidance?.quickTests;
+      const quickTests = enhancedIssues[0]!.testingGuidance?.quickTests;
       expect(quickTests?.some(test => 
         test.includes('Right-click') || test.includes('alt text')
       )).toBe(true);
@@ -299,7 +299,7 @@ describe('IssueProcessor', () => {
         includeTestingGuidance: true,
       });
 
-      const testing = enhancedIssues[0].testingGuidance;
+      const testing = enhancedIssues[0]!.testingGuidance;
       expect(testing?.screenReaderTests).toBeDefined();
       expect(testing?.screenReaderTests?.length).toBeGreaterThan(0);
     });
@@ -317,11 +317,11 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues(issues);
 
-      expect(enhancedIssues.find(i => i.id === 'images')?.category).toBe('images');
-      expect(enhancedIssues.find(i => i.id === 'color')?.category).toBe('color');
-      expect(enhancedIssues.find(i => i.id === 'keyboard')?.category).toBe('keyboard');
-      expect(enhancedIssues.find(i => i.id === 'forms')?.category).toBe('forms');
-      expect(enhancedIssues.find(i => i.id === 'aria')?.category).toBe('aria');
+      expect(enhancedIssues.find(i => i.id === 'images')!.category).toBe('images');
+      expect(enhancedIssues.find(i => i.id === 'color')!.category).toBe('color');
+      expect(enhancedIssues.find(i => i.id === 'keyboard')!.category).toBe('keyboard');
+      expect(enhancedIssues.find(i => i.id === 'forms')!.category).toBe('forms');
+      expect(enhancedIssues.find(i => i.id === 'aria')!.category).toBe('aria');
     });
 
     it('should categorize by element type when WCAG reference is unclear', async () => {
@@ -331,7 +331,7 @@ describe('IssueProcessor', () => {
       });
 
       const enhancedIssues = await issueProcessor.processIssues([formIssue]);
-      expect(enhancedIssues[0].category).toBe('forms');
+      expect(enhancedIssues[0]!.category).toBe('forms');
     });
   });
 
@@ -340,10 +340,10 @@ describe('IssueProcessor', () => {
       const issue = createMockIssue({ wcagReference: '1.1.1' });
 
       const enhancedIssues = await issueProcessor.processIssues([issue]);
-      const relatedIssues = enhancedIssues[0].relatedIssues;
+      const relatedIssues = enhancedIssues[0]!.relatedIssues;
 
       expect(relatedIssues).toBeDefined();
-      expect(relatedIssues?.length).toBeGreaterThan(0);
+      expect(relatedIssues!.length).toBeGreaterThan(0);
       expect(relatedIssues).toContain('1.4.5'); // Related to 1.1.1
     });
   });
@@ -414,7 +414,7 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([incompleteIssue]);
       expect(enhancedIssues).toHaveLength(1);
-      expect(enhancedIssues[0].title).toBe('Accessibility Issue'); // Default title
+      expect(enhancedIssues[0]!.title).toBe('Accessibility Issue'); // Default title
     });
 
     it('should handle malformed HTML gracefully', async () => {
@@ -425,7 +425,7 @@ describe('IssueProcessor', () => {
 
       const enhancedIssues = await issueProcessor.processIssues([malformedIssue]);
       expect(enhancedIssues).toHaveLength(1);
-      expect(enhancedIssues[0].elements[0].html).toBeDefined();
+      expect(enhancedIssues[0]!.elements![0]!.html).toBeDefined();
     });
   });
 
@@ -434,7 +434,7 @@ describe('IssueProcessor', () => {
       const contrastIssue = createMockIssue({ wcagReference: '1.4.3' });
 
       const enhancedIssues = await issueProcessor.processIssues([contrastIssue]);
-      const tools = enhancedIssues[0].contextualRemediation?.recommendedTools;
+      const tools = enhancedIssues[0]!.contextualRemediation?.recommendedTools;
 
       expect(tools).toContain('WebAIM Contrast Checker');
       expect(tools).toContain('Colour Contrast Analyser');
@@ -444,7 +444,7 @@ describe('IssueProcessor', () => {
       const keyboardIssue = createMockIssue({ wcagReference: '2.1.1' });
 
       const enhancedIssues = await issueProcessor.processIssues([keyboardIssue]);
-      const tools = enhancedIssues[0].contextualRemediation?.recommendedTools;
+      const tools = enhancedIssues[0]!.contextualRemediation?.recommendedTools;
 
       expect(tools).toContain('Keyboard navigation testing');
     });
@@ -453,10 +453,10 @@ describe('IssueProcessor', () => {
       const issue = createMockIssue({ wcagReference: '1.1.1' });
 
       const enhancedIssues = await issueProcessor.processIssues([issue]);
-      const tools = enhancedIssues[0].contextualRemediation?.recommendedTools;
+      const tools = enhancedIssues[0]!.contextualRemediation?.recommendedTools;
 
       const uniqueTools = [...new Set(tools)];
-      expect(tools?.length).toBe(uniqueTools.length);
+      expect(tools!.length).toBe(uniqueTools.length);
     });
   });
 }); 
