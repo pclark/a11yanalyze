@@ -3,7 +3,19 @@
  * Tests comprehensive help system with topic navigation and search
  */
 
-import { HelpManager, HelpCategory } from './help-manager';
+// Mock console methods
+let logOutput: string[] = [];
+let errorOutput: string[] = [];
+const originalLog = console.log;
+const originalError = console.error;
+console.log = (...args: any[]) => {
+  logOutput.push(args.join(' '));
+  originalLog(...args);
+};
+console.error = (...args: any[]) => {
+  errorOutput.push(args.join(' '));
+  originalError(...args);
+};
 
 // Mock chalk for testing
 jest.mock('chalk', () => {
@@ -36,187 +48,161 @@ jest.mock('chalk', () => {
   };
 });
 
-// Mock console methods
-const consoleSpy = {
-  log: jest.spyOn(console, 'log').mockImplementation(() => {}),
-  error: jest.spyOn(console, 'error').mockImplementation(() => {}),
-};
+import { HelpManager, HelpCategory } from './help-manager';
+
+beforeAll(() => {
+  // Removed jest.spyOn(console, 'log').mockImplementation((...args) => {
+  //   logOutput.push(args.join(' '));
+  //   originalLog(...args);
+  // });
+  // Removed jest.spyOn(console, 'error').mockImplementation((...args) => {
+  //   errorOutput.push(args.join(' '));
+  //   originalError(...args);
+  // });
+});
+afterAll(() => {
+  (console.log as any) = originalLog;
+  (console.error as any) = originalError;
+});
+beforeEach(() => {
+  logOutput = [];
+  errorOutput = [];
+  // Removed jest.clearAllMocks() to preserve mock implementations
+});
 
 // Helper to check if any console.log call contains a substring
 function logContains(substring: string) {
-  return consoleSpy.log.mock.calls.flat().some((call: any) => typeof call === 'string' && call.includes(substring));
+  return logOutput.some(line => line.includes(substring));
 }
 
 describe('HelpManager', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    Object.values(consoleSpy).forEach(spy => spy.mockClear());
-  });
-
   describe('Topic Help Display', () => {
     it('should display getting-started help', () => {
       HelpManager.showHelp('getting-started');
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Getting Started')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Getting Started/i);
     });
 
     it('should display scanning help', () => {
       HelpManager.showHelp('scanning');
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Single Page Scanning')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Single Page Scanning/i);
     });
 
     it('should display crawling help', () => {
       HelpManager.showHelp('crawling');
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Website Crawling')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Website Crawling/i);
     });
 
     it('should display configuration help', () => {
       HelpManager.showHelp('configuration');
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Configuration Guide')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Configuration Guide/i);
     });
 
     it('should display scoring help', () => {
       HelpManager.showHelp('scoring');
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Scoring System')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Scoring System/i);
     });
 
     it('should display reporting help', () => {
       HelpManager.showHelp('reporting');
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Reports and Output')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Reports and Output/i);
     });
 
     it('should display troubleshooting help', () => {
       HelpManager.showHelp('troubleshooting');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Troubleshooting')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Troubleshooting/i);
     });
 
     it('should display best-practices help', () => {
       HelpManager.showHelp('best-practices');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Best Practices')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Best Practices/i);
     });
 
     it('should display examples help', () => {
       HelpManager.showHelp('examples');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Practical Examples')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Practical Examples/i);
     });
 
     it('should display api help', () => {
       HelpManager.showHelp('api');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Integration & API')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Integration & API/i);
     });
 
     it('should handle invalid help topic gracefully', () => {
       HelpManager.showHelp('invalid-topic' as HelpCategory);
-      
-      expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining("Help topic 'invalid-topic' not found")
-      );
+      expect(errorOutput.join('\n')).toMatch(/Help topic 'invalid-topic' not found/);
     });
   });
 
   describe('Topic Menu Display', () => {
     it('should display help topic menu', () => {
       HelpManager.showTopicMenu();
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('A11Y Analyze Help Topics')).toBe(true);
-      
-      // Should display all topics
-      expect(logContains('getting-started')).toBe(true);
-      expect(logContains('scanning')).toBe(true);
-      expect(logContains('crawling')).toBe(true);
+      const output = logOutput.join('\n');
+      expect(output).toMatch(/A11Y Analyze Help Topics/i);
+      expect(output).toMatch(/getting-started/);
+      expect(output).toMatch(/scanning/);
+      expect(output).toMatch(/crawling/);
     });
 
     it('should show usage examples in topic menu', () => {
       HelpManager.showTopicMenu();
-      
-      expect(logContains('Usage:')).toBe(true);
-      expect(logContains('a11yanalyze help <topic>')).toBe(true);
-      expect(logContains('Examples:')).toBe(true);
+      const output = logOutput.join('\n');
+      expect(output).toMatch(/Usage:/);
+      expect(output).toMatch(/a11yanalyze help <topic>/);
+      expect(output).toMatch(/Examples:/);
     });
   });
 
   describe('Quick Tips', () => {
     it('should show general tips by default', () => {
       HelpManager.showQuickTips();
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Quick Tips:')).toBe(true);
-      expect(logContains('Get started:')).toBe(true);
+      const output = logOutput.join('\n');
+      expect(output).toMatch(/Quick Tips:/);
+      expect(output).toMatch(/Get started:/);
     });
 
     it('should show scan-specific tips', () => {
       HelpManager.showQuickTips('scan');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Quick Tips:')).toBe(true);
-      expect(logContains('Start with:')).toBe(true);
+      const output = logOutput.join('\n');
+      expect(output).toMatch(/Quick Tips:/);
+      expect(output).toMatch(/Start with:/);
     });
 
     it('should show crawl-specific tips', () => {
       HelpManager.showQuickTips('crawl');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Basic crawl:')).toBe(true);
+      const output = logOutput.join('\n');
+      expect(output).toMatch(/Basic crawl:/);
     });
 
     it('should handle unknown command gracefully', () => {
       HelpManager.showQuickTips('unknown-command');
-      
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('No tips available')
-      );
+      expect(logOutput.join('\n')).toMatch(/No tips available/);
     });
   });
 
   describe('Help Search', () => {
     it('should search help content for keywords', () => {
       HelpManager.searchHelp('scanning');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Search Results for "scanning"')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Search Results for "scanning"/);
     });
 
     it('should find multiple matching topics', () => {
       HelpManager.searchHelp('configuration');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      // Should find configuration topic and possibly others
+      expect(logOutput.join('\n')).toMatch(/configuration/i);
     });
 
     it('should handle no search results', () => {
       HelpManager.searchHelp('nonexistentterm12345');
-      
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('No help topics found')
-      );
+      expect(logOutput.join('\n')).toMatch(/No help topics found/);
     });
 
     it('should search case-insensitively', () => {
       HelpManager.searchHelp('CRAWLING');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      expect(logContains('Search Results')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/Search Results/i);
     });
 
     it('should search in examples and descriptions', () => {
       HelpManager.searchHelp('example.com');
-      
-      expect(consoleSpy.log).toHaveBeenCalled();
-      // Should find topics containing example.com in examples
+      expect(logOutput.join('\n')).toMatch(/example.com/);
     });
   });
 
@@ -265,35 +251,38 @@ describe('HelpManager', () => {
       HelpManager.showHelp('scanning');
       
       // Should show formatted code examples
-      expect(logContains('a11yanalyze scan')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/a11yanalyze scan/);
     });
 
     it('should include tips and warnings', () => {
       HelpManager.showHelp('troubleshooting');
       
       // Should display tips for troubleshooting
-      expect(consoleSpy.log).toHaveBeenCalled();
+      expect(logOutput.join('\n')).toMatch(/Tips:/);
     });
 
     it('should include see-also references', () => {
       HelpManager.showHelp('scanning');
       
       // Should include see-also section
-      expect(logContains('See Also:')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/See Also:/);
     });
 
     it('should include practical examples', () => {
       HelpManager.showHelp('examples');
       
-      expect(logContains('E-commerce')).toBe(true);
+      expect(logOutput.join('\n')).toMatch(/E-commerce/);
     });
 
     it('should format different code languages differently', () => {
       // Test that different language code blocks are handled
       HelpManager.showHelp('configuration');
       
-      expect(consoleSpy.log).toHaveBeenCalled();
-      // Verify that bash, json, js, yaml examples are shown
+      const output = logOutput.join('\n');
+      expect(output).toMatch(/bash/);
+      expect(output).toMatch(/json/);
+      expect(output).toMatch(/js/);
+      expect(output).toMatch(/yaml/);
     });
   });
 
@@ -304,7 +293,7 @@ describe('HelpManager', () => {
       
       HelpManager.showTopicMenu();
       
-      expect(consoleSpy.log).toHaveBeenCalled();
+      expect(logOutput.length).toBeGreaterThan(0);
       
       process.stdout.columns = originalColumns;
     });
@@ -327,10 +316,7 @@ describe('HelpManager', () => {
 
     it('should handle empty search queries', () => {
       HelpManager.searchHelp('');
-      
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('No help topics found')
-      );
+      expect(logOutput.join('\n')).toMatch(/No help topics found/);
     });
 
     it('should handle special characters in search', () => {
@@ -341,70 +327,53 @@ describe('HelpManager', () => {
   describe('Content Quality', () => {
     it('should provide comprehensive getting-started content', () => {
       HelpManager.showHelp('getting-started');
-      
-      const logCalls = consoleSpy.log.mock.calls;
-      const allOutput = logCalls.map(call => call[0]).join('\n');
-      
-      // Should contain essential getting started information
-      expect(allOutput).toMatch(/quick start|basic|example/i);
-      expect(allOutput).toMatch(/scan|accessibility/i);
+      let allOutput = logOutput.join(' ').replace(/\s+/g, ' ').trim();
+      expect(allOutput.toLowerCase()).toContain('quick start');
+      expect(allOutput.toLowerCase()).toContain('scan');
     });
 
     it('should provide practical examples', () => {
       HelpManager.showHelp('examples');
-      
-      const logCalls = consoleSpy.log.mock.calls;
-      const allOutput = logCalls.map(call => call[0]).join('\n');
-      
-      // Should contain real-world examples
-      expect(allOutput).toMatch(/e-commerce|mobile|government/i);
+      let allOutput = logOutput.join(' ').replace(/\s+/g, ' ').trim();
+      expect(allOutput.toLowerCase()).toContain('e-commerce');
+      expect(allOutput.toLowerCase()).toContain('mobile');
+      expect(allOutput.toLowerCase()).toContain('government');
     });
 
     it('should provide troubleshooting guidance', () => {
       HelpManager.showHelp('troubleshooting');
-      
-      const logCalls = consoleSpy.log.mock.calls;
-      const allOutput = logCalls.map(call => call[0]).join('\n');
-      
-      // Should contain troubleshooting information
-      expect(allOutput).toMatch(/timeout|error|debug/i);
+      let allOutput = logOutput.join(' ').replace(/\s+/g, ' ').trim();
+      expect(allOutput.toLowerCase()).toContain('timeout');
+      expect(allOutput.toLowerCase()).toContain('error');
+      expect(allOutput.toLowerCase()).toContain('debug');
     });
 
     it('should include comprehensive API documentation', () => {
       HelpManager.showHelp('api');
-      
-      const logCalls = consoleSpy.log.mock.calls;
-      const allOutput = logCalls.map(call => call[0]).join('\n');
-      
-      // Should contain API/integration information
-      expect(allOutput).toMatch(/exit code|json|environment/i);
+      let allOutput = logOutput.join(' ').replace(/\s+/g, ' ').trim();
+      expect(allOutput.toLowerCase()).toContain('exit code');
+      expect(allOutput.toLowerCase()).toContain('json');
+      expect(allOutput.toLowerCase()).toContain('environment');
     });
   });
 
   describe('Cross-References', () => {
     it('should reference related topics appropriately', () => {
       HelpManager.showHelp('scanning');
-      
-      const logCalls = consoleSpy.log.mock.calls;
-      const allOutput = logCalls.map(call => call[0]).join('\n');
-      
-      // Should reference related topics
-      expect(allOutput).toMatch(/crawling|configuration|scoring/i);
+      let allOutput = logOutput.join(' ').replace(/\s+/g, ' ').trim();
+      expect(allOutput.toLowerCase()).toContain('crawling');
+      expect(allOutput.toLowerCase()).toContain('configuration');
+      expect(allOutput.toLowerCase()).toContain('scoring');
     });
 
     it('should maintain consistency across topics', () => {
       // Test that command examples are consistent
       const topics: HelpCategory[] = ['scanning', 'crawling', 'configuration'];
-      
       topics.forEach(topic => {
-        consoleSpy.log.mockClear();
+        logOutput = [];
         HelpManager.showHelp(topic);
-        
-        const logCalls = consoleSpy.log.mock.calls;
-        const allOutput = logCalls.map(call => call[0]).join('\n');
-        
-        // Should contain consistent command format
-        expect(allOutput).toMatch(/a11yanalyze/);
+        let allOutput = logOutput.join(' ').replace(/\s+/g, ' ').trim();
+        expect(allOutput.toLowerCase()).toContain('a11yanalyze');
       });
     });
   });

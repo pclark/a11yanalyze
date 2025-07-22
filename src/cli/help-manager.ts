@@ -73,11 +73,11 @@ export class HelpManager {
   private static readonly HELP_CONTENT: Record<HelpCategory, HelpContent> = {
     'getting-started': {
       title: '🚀 Getting Started with A11Y Analyze',
-      description: 'Learn the basics of accessibility testing with our comprehensive tool',
+      description: 'Learn the basics of accessibility testing with our comprehensive tool. This quick start guide will help you run your first scan and interpret results.',
       sections: [
         {
           title: 'Quick Start',
-          content: 'Get up and running with accessibility testing in minutes',
+          content: 'Get up and running with accessibility testing in minutes. Run a basic scan, review the output, and explore further options.',
           codeBlocks: [
             {
               title: 'Basic Page Scan',
@@ -90,22 +90,31 @@ export class HelpManager {
               language: 'bash',
               code: 'a11yanalyze scan https://example.com --verbose',
               description: 'Get detailed progress information'
+            },
+            {
+              title: 'Quick Start Example',
+              language: 'bash',
+              code: 'a11yanalyze scan https://ecommerce.example.com --format both',
+              description: 'Scan an e-commerce site and output both console and JSON reports'
             }
           ],
           tips: [
             'Start with a single page scan to understand the tool',
             'Use --verbose to see detailed progress information',
-            'Check the exit code: 0 = success, 1 = issues found'
+            'Check the exit code: 0 = success, 1 = issues found',
+            'See practical examples: a11yanalyze help examples',
+            'For troubleshooting, see: a11yanalyze help troubleshooting'
           ]
         },
         {
           title: 'Understanding Results',
-          content: 'Learn how to interpret accessibility scan results',
+          content: 'Learn how to interpret accessibility scan results. The tool provides a score, issue breakdown, and remediation tips.',
           tips: [
             'Issues are categorized by WCAG level (A, AA, AAA)',
             'Severity levels: critical, serious, moderate, minor, warning',
             'Scores range from 0-100, with 80+ considered good',
-            'Each issue includes remediation guidance and help URLs'
+            'Each issue includes remediation guidance and help URLs',
+            'See also: a11yanalyze help reporting'
           ]
         }
       ],
@@ -116,9 +125,16 @@ export class HelpManager {
           command: 'a11yanalyze scan https://example.com --format both',
           explanation: 'Scans a page and shows results both in console and JSON format',
           expectedOutput: 'Console output with score and JSON report'
+        },
+        {
+          title: 'E-commerce Quick Start',
+          description: 'Scan an e-commerce product page for accessibility',
+          command: 'a11yanalyze scan https://shop.example.com/product/123 --include-aaa --screenshot',
+          explanation: 'Comprehensive scan including AAA guidelines with screenshot capture',
+          expectedOutput: 'Accessibility issues, warnings, and screenshot saved'
         }
       ],
-      seeAlso: ['scanning', 'configuration', 'examples']
+      seeAlso: ['scanning', 'configuration', 'examples', 'troubleshooting']
     },
 
     'scanning': {
@@ -487,26 +503,28 @@ export class HelpManager {
 
     'troubleshooting': {
       title: '🔧 Troubleshooting',
-      description: 'Solve common issues and get help when things go wrong',
+      description: 'Solve common issues and get help when things go wrong. Includes timeout, error, and debug guidance.',
       sections: [
         {
           title: 'Common Issues',
-          content: 'Solutions to frequently encountered problems',
+          content: 'Solutions to frequently encountered problems. Includes timeout, error, and debug tips.',
           tips: [
             'Timeout errors: Increase --timeout value for slow pages',
             'Network errors: Check internet connection and URL accessibility',
             'Permission errors: Ensure proper file write permissions for output',
-            'Memory issues: Reduce --concurrency or --max-pages for large sites'
+            'Memory issues: Reduce --concurrency or --max-pages for large sites',
+            'For API and integration help, see: a11yanalyze help api'
           ],
           warnings: [
             'Some sites block automated tools - check robots.txt',
             'CAPTCHA or login requirements may prevent scanning',
-            'Heavy JavaScript sites may need longer timeouts'
+            'Heavy JavaScript sites may need longer timeouts',
+            'If you see ambiguous roles in screen reader simulation, review the Known Limitations section in the README.'
           ]
         },
         {
           title: 'Debugging Options',
-          content: 'Get more information when things go wrong',
+          content: 'Get more information when things go wrong. Use debug and verbose output, and export error logs.',
           codeBlocks: [
             {
               title: 'Debug Mode',
@@ -519,17 +537,24 @@ export class HelpManager {
               language: 'bash',
               code: 'a11yanalyze scan https://example.com --verbose --export-errors debug.log',
               description: 'Verbose mode with error log export'
+            },
+            {
+              title: 'Timeout Example',
+              language: 'bash',
+              code: 'a11yanalyze scan https://slow-site.com --timeout 120000',
+              description: 'Increase timeout for slow-loading sites'
             }
           ]
         },
         {
           title: 'Getting Help',
-          content: 'When you need additional support',
+          content: 'When you need additional support. See the README or use the API help topic.',
           tips: [
             'Use --help for command-specific guidance',
             'Check error logs for detailed error information',
             'Verify URL accessibility in a regular browser first',
-            'Test with simpler pages to isolate issues'
+            'Test with simpler pages to isolate issues',
+            'See also: a11yanalyze help api'
           ]
         }
       ],
@@ -541,7 +566,7 @@ export class HelpManager {
           explanation: 'Enable debug mode with extended timeout and error logging'
         }
       ],
-      seeAlso: ['configuration', 'best-practices']
+      seeAlso: ['configuration', 'best-practices', 'api']
     },
 
     'best-practices': {
@@ -606,11 +631,11 @@ export class HelpManager {
 
     'examples': {
       title: '💡 Practical Examples',
-      description: 'Real-world usage examples and common scenarios',
+      description: 'Real-world usage examples and common scenarios. Includes e-commerce, mobile, government, and troubleshooting.',
       sections: [
         {
           title: 'E-commerce Testing',
-          content: 'Test online shopping experiences for accessibility',
+          content: 'Test online shopping experiences for accessibility. Example: scan a product page or checkout flow.',
           codeBlocks: [
             {
               title: 'Product Page Test',
@@ -628,7 +653,7 @@ export class HelpManager {
         },
         {
           title: 'Content Management',
-          content: 'Test CMS-generated content for accessibility',
+          content: 'Test CMS-generated content for accessibility. Example: scan a blog or documentation site.',
           codeBlocks: [
             {
               title: 'Blog Analysis',
@@ -646,7 +671,7 @@ export class HelpManager {
         },
         {
           title: 'Mobile-First Testing',
-          content: 'Test responsive and mobile experiences',
+          content: 'Test responsive and mobile experiences. Example: scan with mobile viewport.',
           codeBlocks: [
             {
               title: 'Mobile Viewport Test',
@@ -659,6 +684,18 @@ export class HelpManager {
               language: 'bash',
               code: 'for size in "375x667" "768x1024" "1920x1080"; do\n  a11yanalyze scan https://example.com --viewport $size --output "report-${size}.json"\ndone',
               description: 'Test multiple responsive breakpoints'
+            }
+          ]
+        },
+        {
+          title: 'Troubleshooting Example',
+          content: 'Diagnose and resolve scan issues. Example: scan with debug and extended timeout.',
+          codeBlocks: [
+            {
+              title: 'Debug Failed Scan',
+              language: 'bash',
+              code: 'a11yanalyze scan https://problematic-site.com --debug --timeout 60000 --export-errors debug.log',
+              description: 'Enable debug mode with extended timeout and error logging'
             }
           ]
         }
@@ -677,26 +714,27 @@ export class HelpManager {
           explanation: 'Focus on student-facing content while excluding admin areas'
         }
       ],
-      seeAlso: ['scanning', 'crawling', 'best-practices']
+      seeAlso: ['scanning', 'crawling', 'best-practices', 'troubleshooting']
     },
 
     'api': {
       title: '🔌 Integration & API',
-      description: 'Integrate A11Y Analyze with other tools and workflows',
+      description: 'Integrate A11Y Analyze with other tools and workflows. Includes exit code, JSON, and environment variable documentation.',
       sections: [
         {
           title: 'Exit Codes',
-          content: 'Understanding exit codes for automation',
+          content: 'Understanding exit codes for automation. Use exit codes in CI/CD pipelines to fail builds on issues.',
           tips: [
             'Exit code 0: Scan completed successfully, no critical issues',
             'Exit code 1: Scan completed but found accessibility issues',
             'Exit code 2: Scan failed due to configuration or technical errors',
-            'Use exit codes in CI/CD pipelines to fail builds on issues'
+            'Use exit codes in CI/CD pipelines to fail builds on issues',
+            'See also: a11yanalyze help troubleshooting'
           ]
         },
         {
           title: 'JSON Output Format',
-          content: 'Structure of JSON reports for programmatic use',
+          content: 'Structure of JSON reports for programmatic use. See the README for a full schema.',
           codeBlocks: [
             {
               title: 'Basic JSON Structure',
@@ -708,7 +746,7 @@ export class HelpManager {
         },
         {
           title: 'Environment Variables',
-          content: 'Complete list of supported environment variables',
+          content: 'Complete list of supported environment variables. See the README for more.',
           codeBlocks: [
             {
               title: 'Common Environment Variables',
@@ -725,9 +763,15 @@ export class HelpManager {
           description: 'Use in Jenkins CI/CD pipeline',
           command: 'a11yanalyze scan $BUILD_URL --format json --output accessibility-report.json && archive accessibility-report.json',
           explanation: 'Scan build deployment and archive results as build artifact'
+        },
+        {
+          title: 'API/JSON Output Example',
+          description: 'Use JSON output for integration with other tools',
+          command: 'a11yanalyze scan https://example.com --format json --output api-report.json',
+          explanation: 'Generates a machine-readable JSON report for API consumption'
         }
       ],
-      seeAlso: ['configuration', 'reporting', 'best-practices']
+      seeAlso: ['configuration', 'reporting', 'best-practices', 'troubleshooting']
     }
   };
 

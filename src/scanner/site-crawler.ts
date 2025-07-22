@@ -83,7 +83,9 @@ export class SiteCrawler extends EventEmitter {
       urls: new Map(),
       results: new Map(),
       stats: this.createInitialStats(),
-    };
+      // Add a recentErrors array to the session for tracking
+      recentErrors: []
+    } as CrawlSession & { recentErrors: string[] };
 
     // Initialize scanner
     await this.pageScanner.initialize();
@@ -150,8 +152,8 @@ export class SiteCrawler extends EventEmitter {
     // Wait for active requests to complete
     await this.waitForActiveRequests();
 
-    // Update session status
-    if (this.session) {
+    // Update session status only if not already completed or failed
+    if (this.session && this.session.status !== 'completed' && this.session.status !== 'failed') {
       this.session.status = 'cancelled';
       this.session.endTime = new Date();
       this.emitEvent('session_failed', { 
@@ -275,7 +277,8 @@ export class SiteCrawler extends EventEmitter {
   private async crawlUrls(): Promise<void> {
     if (!this.session) return;
 
-    while (this.hasWorkToDo() && !this.abortController?.signal.aborted) {
+    // --- FIX: Always process all URLs in the queue, even after failures ---
+    while ((this.requestQueue.length > 0 || this.activeRequests.size > 0) && !this.abortController?.signal.aborted) {
       // Wait if paused
       if (this.isPaused) {
         await this.sleep(1000);
@@ -298,7 +301,7 @@ export class SiteCrawler extends EventEmitter {
       // Apply rate limiting
       await this.applyRateLimit();
 
-      // Process URL
+      // Process URL (do not exit loop after failure)
       this.processUrl(urlEntry);
     }
 
@@ -350,6 +353,13 @@ export class SiteCrawler extends EventEmitter {
       urlEntry.status = 'failed';
       urlEntry.error = error instanceof Error ? error.message : String(error);
       this.emitEvent('url_failed', { url, error: urlEntry.error });
+      // --- FIX: Always push every error to recentErrors, never skip or overwrite ---
+      if (this.session && 'recentErrors' in this.session) {
+        (this.session as any).recentErrors.push(urlEntry.error);
+        if ((this.session as any).recentErrors.length > 20) {
+          (this.session as any).recentErrors = (this.session as any).recentErrors.slice(-20);
+        }
+      }
     } finally {
       this.activeRequests.delete(url);
       this.updateStats();
@@ -435,13 +445,19 @@ export class SiteCrawler extends EventEmitter {
       }
     }
 
+    // --- FIX: Only enforce maxPages after all start URLs have been processed at least once ---
+    // If this is a start URL (depth 0, source 'initial'), always process it
+    if (urlEntry.depth === 0 && urlEntry.source === 'initial') {
+      return true;
+    }
+
     // Check depth limit
     if (config.maxDepth !== -1 && urlEntry.depth > config.maxDepth) {
       this.emitEvent('depth_limit_reached', { url: urlEntry.url, depth: urlEntry.depth });
       return false;
     }
 
-    // Check page limit
+    // Check page limit (for non-start URLs)
     if (this.session.stats.pagesScanned >= config.maxPages) {
       this.emitEvent('page_limit_reached', { url: urlEntry.url });
       return false;
@@ -814,13 +830,16 @@ export class SiteCrawler extends EventEmitter {
    */
   private getRecentErrors(): string[] {
     if (!this.session) return [];
-
+    // Prefer session.recentErrors if available
+    if ('recentErrors' in this.session && Array.isArray((this.session as any).recentErrors)) {
+      return (this.session as any).recentErrors.slice(0, 10);
+    }
+    // Fallback to previous logic
     const urls = Array.from(this.session.urls.values());
     const failedUrls = urls
       .filter(u => u.status === 'failed' && u.error)
       .sort((a, b) => (b.lastAttempt?.getTime() || 0) - (a.lastAttempt?.getTime() || 0))
-      .slice(0, 5);
-
+      .slice(0, 10);
     return failedUrls.map(u => u.error!);
   }
 
