@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.2.0](https://github.com/phillipclark/a11yanalyze/compare/v1.1.0...v1.2.0) (2025-07-23)
+
+
+### Bug Fixes
+
+* resolve p-limit ES module compatibility issue ([d35f4aa](https://github.com/phillipclark/a11yanalyze/commit/d35f4aaaa7da9b5a3951225f223dab0844e873ce))
+
+
+### Features
+
+* Add some perf indicators to storybook-batch and batch the scans ([fe4b014](https://github.com/phillipclark/a11yanalyze/commit/fe4b014a54d7830582b53eb24a2944d0a052ea66))
+
 # [1.1.0](https://github.com/phillipclark/a11yanalyze/compare/v1.0.0...v1.1.0) (2025-07-23)
 
 
