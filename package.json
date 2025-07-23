@@ -70,6 +70,7 @@
     "js-yaml": "^4.1.0",
     "node-fetch": "^2.7.0",
     "ora": "^8.2.0",
-    "playwright": "^1.54.1"
+    "p-limit": "^6.2.0",
+    "playwright": "^1.40.1"
   }
 }

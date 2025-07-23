@@ -151,7 +151,6 @@ export class RuleEngine {
         throw new Error('axeCoreConfig is not defined');
       }
 
-      console.info('Axe-core configuration:', config);
       // Ensure rules is always an object
       if (typeof config.rules !== 'object' || config.rules == undefined) {
         config.rules = [];

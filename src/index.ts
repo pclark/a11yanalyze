@@ -468,6 +468,7 @@ async function main(): Promise<void> {
     .option('--timeout <ms>', 'Page scan timeout in milliseconds', '30000')
     .option('--keyboard-nav', 'Enable keyboard navigation automation (default: true)', true)
     .option('--screen-reader-sim', 'Enable screen reader simulation (default: true)', true)
+    .option('--batch-size', 'The number of stories to batch together when scanning (default: 5)', '5')
     .action(async (options) => {
       try {
         const runner = new StorybookBatchRunner();
@@ -479,6 +480,7 @@ async function main(): Promise<void> {
           timeout: parseInt(options.timeout, 10),
           keyboardNav: options.keyboardNav,
           screenReaderSim: options.screenReaderSim,
+          batchSize: options.batchSize,
         });
         console.log(`\nBatch VPAT/Section 508 reports generated in: ${options.outputDir}`);
         console.log(`See vpat-index.json for a summary of all stories.`);
