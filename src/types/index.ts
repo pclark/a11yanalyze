@@ -57,6 +57,8 @@ export interface ScanMetadata {
     final: string;
     redirects: number;
   };
+  title?: string; // Added for page title
+  language?: string; // Added for page language
 }
 
 export interface ScanError {

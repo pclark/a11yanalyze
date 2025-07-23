@@ -92,4 +92,15 @@ tastysoft-accordion-report.json
 wikipedia-report.json
 /vpat-reports
 # Or, to ignore all scan report outputs
-*-report.json 
+*-report.json
+
+# Test output files
+test-output*.txt
+test-results*.json
+config-manager-test-results.json
+
+# Files containing "tastysof" in the name
+*tastysof*
+
+# Output directories
+tastysoft-*/ 

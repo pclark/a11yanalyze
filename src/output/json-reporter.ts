@@ -72,7 +72,7 @@ export class JsonReporter {
       return this.validateAndEnhanceReport(report);
 
     } catch (error) {
-      return this.generateErrorReport(error, 'page', scanResult.url, startTime);
+      return this.generateErrorReport(error, 'page', scanResult?.url || '', startTime);
     }
   }
 
@@ -177,7 +177,7 @@ export class JsonReporter {
 
     return {
       url: scanResult.url,
-      title: 'Unknown Title', // Title would come from actual page scan
+      title: scanResult.metadata?.title || 'Unknown Title',
       score: scanResult.score,
       compliant: scanResult.compliance?.compliant || false,
       issues: reportIssues,
@@ -274,7 +274,7 @@ export class JsonReporter {
 
       return {
         url: result.url,
-        title: 'Unknown Title', // Would be extracted from page content during scanning
+        title: result.metadata?.title || 'Unknown Title',
         score: result.score,
         compliant: result.compliance?.compliant || false,
         issuesBySeverity,
@@ -470,16 +470,15 @@ export class JsonReporter {
     const hasA = scanResults.every(result => 
       result.issues.filter(issue => issue.level === 'A' && issue.severity !== 'warning').length === 0
     );
-    
     const hasAA = hasA && scanResults.every(result => 
       result.issues.filter(issue => issue.level === 'AA' && issue.severity !== 'warning').length === 0
     );
-    
-    const hasAAA = hasAA && scanResults.every(result => 
-      result.issues.filter(issue => issue.level === 'AAA' && issue.severity !== 'warning').length === 0
+    // Only return AAA if there are no issues at all (not even warnings)
+    const hasStrictAAA = hasAA && scanResults.every(result => 
+      result.issues.filter(issue => issue.level === 'AAA').length === 0
     );
 
-    if (hasAAA) return 'AAA';
+    if (hasStrictAAA) return 'AAA';
     if (hasAA) return 'AA';
     if (hasA) return 'A';
     return 'None';
@@ -584,9 +583,9 @@ export class JsonReporter {
   // Additional helper methods would be implemented here...
   private convertPageMetadata(scanResult: ScanResult): PageMetadata {
     return {
-      title: 'Unknown', // Would be extracted from page content during scanning
-      language: 'en', // Default, should be extracted from scan
-      viewport: '1280x720', // Default, should come from scan metadata
+      title: scanResult.metadata?.title || 'Unknown',
+      language: scanResult.metadata?.language || 'en',
+      viewport: scanResult.metadata?.viewport ? `${scanResult.metadata.viewport.width}x${scanResult.metadata.viewport.height}` : '1280x720',
       charset: 'UTF-8', // Default, should be extracted
       size: {
         totalElements: scanResult.metadata?.totalElements || 0,

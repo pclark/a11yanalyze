@@ -112,6 +112,29 @@ export class UrlValidator {
    */
   async validate(input: string): Promise<UrlValidationResult> {
     try {
+      // Path traversal detection BEFORE normalization
+      // Extract path from input (if present)
+      let inputPath = '';
+      try {
+        const match = input.match(/^[a-z][a-z0-9+.-]*:\/\/[^/]+(\/[^?#]*)?/i);
+        if (match && match[1]) {
+          inputPath = match[1];
+        } else if (input.startsWith('/')) {
+          inputPath = input;
+        }
+      } catch {}
+      if (inputPath.includes('..')) {
+        return {
+          isValid: false,
+          error: {
+            type: 'security',
+            message: 'URL contains potentially dangerous path traversal patterns',
+            input,
+            fixes: ['Remove ".." from the URL path'],
+          },
+        };
+      }
+
       // Normalize input
       const normalizedInput = this.normalizeInput(input);
       
@@ -144,8 +167,9 @@ export class UrlValidator {
       // Accessibility validation
       const accessibilityResult = this.validateAccessibility(url);
       
-      // Collect warnings
+      // Collect warnings from all steps
       const warnings: string[] = [];
+      warnings.push(...(domainResult.warnings || []));
       warnings.push(...(securityResult.warnings || []));
       warnings.push(...(accessibilityResult.warnings || []));
 
@@ -417,11 +441,6 @@ export class UrlValidator {
   private validateSecurity(url: URL): UrlValidationResult {
     const warnings: string[] = [];
 
-    // HTTPS recommendation
-    if (url.protocol === 'http:' && url.hostname !== 'localhost') {
-      warnings.push('Consider using HTTPS for better security (recommended for accessibility testing)');
-    }
-
     // Check for potentially dangerous URLs
     if (url.pathname.includes('..')) {
       return {
@@ -433,6 +452,11 @@ export class UrlValidator {
           fixes: ['Remove ".." from the URL path'],
         },
       };
+    }
+
+    // HTTPS recommendation
+    if (url.protocol === 'http:' && url.hostname !== 'localhost') {
+      warnings.push('Consider using HTTPS for better security (recommended for accessibility testing)');
     }
 
     return { isValid: true, warnings };

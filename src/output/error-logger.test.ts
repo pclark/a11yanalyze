@@ -94,9 +94,9 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors('debug');
       expect(errors).toHaveLength(1);
-      expect(errors[0]?.message).toBe('Debug message');
-      expect(errors[0]?.level).toBe('debug');
-      expect(errors[0]?.source).toBe('test-component');
+      expect(errors[0]!.message).toBe('Debug message');
+      expect(errors[0]!.level).toBe('debug');
+      expect(errors[0]!.source).toBe('test-component');
     });
 
     it('should log info messages', () => {
@@ -107,7 +107,7 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors('info');
       expect(errors).toHaveLength(1);
-      expect(errors[0]?.message).toBe('Info message');
+      expect(errors[0]!.message).toBe('Info message');
     });
 
     it('should log warnings', () => {
@@ -222,9 +222,9 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].category).toBe('scanning');
-      expect(errors[0].source).toBe('page-scanner');
-      expect(errors[0].context?.scanPhase).toBe('axe-analysis');
+      expect(errors[0]!.category).toBe('scanning');
+      expect(errors[0]!.source).toBe('page-scanner');
+      expect(errors[0]!.context?.scanPhase).toBe('axe-analysis');
     });
 
     it('should log crawling errors with depth info', () => {
@@ -233,9 +233,9 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].category).toBe('crawling');
-      expect(errors[0].source).toBe('site-crawler');
-      expect(errors[0].context?.depth).toBe(3);
+      expect(errors[0]!.category).toBe('crawling');
+      expect(errors[0]!.source).toBe('site-crawler');
+      expect(errors[0]!.context?.depth).toBe(3);
     });
 
     it('should log timeout errors with recovery action', () => {
@@ -243,12 +243,12 @@ describe('ErrorLogger', () => {
       
       const errors = logger.getErrors();
       expect(errors).toHaveLength(1);
-      expect(errors[0].category).toBe('timeout');
-      expect(errors[0].level).toBe('warn');
-      expect(errors[0].source).toBe('timeout-handler');
-      expect(errors[0].context?.timeout).toBe(30000);
-      expect(errors[0].recoveryAction).toBe('Increased timeout to 60s');
-      expect(errors[0].recovered).toBe(true);
+      expect(errors[0]!.category).toBe('timeout');
+      expect(errors[0]!.level).toBe('warn');
+      expect(errors[0]!.source).toBe('timeout-handler');
+      expect(errors[0]!.context?.timeout).toBe(30000);
+      expect(errors[0]!.recoveryAction).toBe('Increased timeout to 60s');
+      expect(errors[0]!.recovered).toBe(true);
     });
   });
 
@@ -275,11 +275,11 @@ describe('ErrorLogger', () => {
 
       const issues = logger.getTechnicalIssues();
       expect(issues).toHaveLength(1);
-      expect(issues[0].type).toBe('performance');
-      expect(issues[0].severity).toBe('high');
-      expect(issues[0].title).toBe('Page Load Performance Issue');
-      expect(issues[0].occurrenceCount).toBe(1);
-      expect(issues[0].suggestedFixes).toContain('Optimize images');
+      expect(issues[0]!.type).toBe('performance');
+      expect(issues[0]!.severity).toBe('high');
+      expect(issues[0]!.title).toBe('Page Load Performance Issue');
+      expect(issues[0]!.occurrenceCount).toBe(1);
+      expect(issues[0]!.suggestedFixes).toContain('Optimize images');
     });
 
     it('should update existing technical issues', () => {
@@ -306,9 +306,9 @@ describe('ErrorLogger', () => {
 
       const issues = logger.getTechnicalIssues();
       expect(issues).toHaveLength(1);
-      expect(issues[0].occurrenceCount).toBe(2);
-      expect(issues[0].affectedUrls).toContain('https://example.com/page1');
-      expect(issues[0].affectedUrls).toContain('https://example.com/page2');
+      expect(issues[0]!.occurrenceCount).toBe(2);
+      expect(issues[0]!.affectedUrls).toContain('https://example.com/page1');
+      expect(issues[0]!.affectedUrls).toContain('https://example.com/page2');
     });
 
     it('should handle different types of technical issues', () => {
@@ -383,10 +383,10 @@ describe('ErrorLogger', () => {
       const stats = logger.getErrorStatistics();
       
       expect(stats.frequentErrors).toHaveLength(2);
-      expect(stats.frequentErrors[0].message).toBe('Common error');
-      expect(stats.frequentErrors[0].count).toBe(3);
-      expect(stats.frequentErrors[1].message).toBe('Rare error');
-      expect(stats.frequentErrors[1].count).toBe(1);
+      expect(stats.frequentErrors[0]!.message).toBe('Common error');
+      expect(stats.frequentErrors[0]!.count).toBe(3);
+      expect(stats.frequentErrors[1]!.message).toBe('Rare error');
+      expect(stats.frequentErrors[1]!.count).toBe(1);
     });
 
     it('should track recovery statistics', () => {
@@ -423,10 +423,10 @@ describe('ErrorLogger', () => {
       const errorLevelErrors = logger.getErrors('error');
       
       expect(debugErrors).toHaveLength(1);
-      expect(debugErrors[0].level).toBe('debug');
+      expect(debugErrors[0]!.level).toBe('debug');
       
       expect(errorLevelErrors).toHaveLength(1);
-      expect(errorLevelErrors[0].level).toBe('error');
+      expect(errorLevelErrors[0]!.level).toBe('error');
     });
 
     it('should filter errors by category', () => {
@@ -441,8 +441,8 @@ describe('ErrorLogger', () => {
       const systemFatalErrors = logger.getErrors('fatal', 'system');
       
       expect(systemFatalErrors).toHaveLength(1);
-      expect(systemFatalErrors[0].level).toBe('fatal');
-      expect(systemFatalErrors[0].category).toBe('system');
+      expect(systemFatalErrors[0]!.level).toBe('fatal');
+      expect(systemFatalErrors[0]!.category).toBe('system');
     });
 
     it('should return all errors when no filters applied', () => {
@@ -639,17 +639,8 @@ describe('ErrorLogger', () => {
       
       const timeoutIssue = issues.find(i => i.type === 'performance' && i.title.includes('Timeout'));
       expect(timeoutIssue).toBeDefined();
-      expect(timeoutIssue?.suggestedFixes).toContain('Increase timeout values');
-    });
-
-    it('should include error context in technical issues', () => {
-      logger.logTimeoutError('Page timeout', 'https://example.com', 30000);
-      
-      const issues = logger.getTechnicalIssues();
-      const timeoutIssue = issues[0];
-      
-      expect(timeoutIssue.technicalDetails.category).toBe('timeout');
-      expect(timeoutIssue.affectedUrls).toContain('https://example.com');
+      expect(timeoutIssue!.technicalDetails.category).toBe('timeout');
+      expect(timeoutIssue!.affectedUrls).toContain('https://example.com');
     });
   });
 
@@ -665,8 +656,9 @@ describe('ErrorLogger', () => {
       logger.logBrowserError('Browser crashed', new Error('crash'), undefined, 'Restarted browser');
       
       const errors = logger.getErrors();
-      expect(errors[0].recovered).toBe(true);
-      expect(errors[0].recoveryAction).toBe('Restarted browser');
+      expect(errors).toHaveLength(1);
+      expect(errors[0]!.recovered).toBe(true);
+      expect(errors[0]!.recoveryAction).toBe('Restarted browser');
       
       const stats = logger.getErrorStatistics();
       expect(stats.recovery.successfulRecoveries).toBe(1);
@@ -676,7 +668,7 @@ describe('ErrorLogger', () => {
       logger.logBrowserError('Browser crashed', new Error('crash'), undefined, 'Attempted restart');
       // Manually mark as not recovered for testing
       const errors = logger.getErrors();
-      errors[0].recovered = false;
+      errors[0]!.recovered = false;
       
       const stats = logger.getErrorStatistics();
       expect(stats.recovery.totalAttempts).toBe(1);
@@ -703,15 +695,15 @@ describe('ErrorLogger', () => {
       logger.error('Contextual error', 'scanning', undefined, 'test-component', context);
       
       const errors = logger.getErrors();
-      expect(errors[0].context).toEqual(context);
+      expect(errors[0]!.context).toEqual(context);
     });
 
     it('should handle undefined context gracefully', () => {
       logger.error('Error without context', 'system');
       
       const errors = logger.getErrors();
-      expect(errors[0].context).toBeUndefined();
-      expect(errors[0].source).toBe('unknown'); // Default source
+      expect(errors[0]!.context).toBeUndefined();
+      expect(errors[0]!.source).toBe('unknown'); // Default source
     });
 
     it('should generate unique error IDs', () => {

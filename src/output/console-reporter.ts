@@ -3,7 +3,7 @@
  * Provides human-readable console output with progress indicators
  */
 
-import chalk from 'chalk';
+const chalk = require('chalk');
 import * as cliProgress from 'cli-progress';
 import figures from 'figures';
 import ora, { Ora } from 'ora';
@@ -86,10 +86,7 @@ export class ConsoleReporter {
       phaseStartTime: new Date(),
     };
 
-    // Configure chalk for color support
-    if (!this.config.colors) {
-      chalk.level = 0;
-    }
+    // Color disabling is not supported in Chalk v5+ via chalk.level. Use environment variables or config instead.
   }
 
   /**
@@ -98,7 +95,7 @@ export class ConsoleReporter {
   init(): void {
     if (this.config.quiet) return;
 
-    this.showHeader();
+    this.showHeader(); // Ensure header is always logged
     this.initializeMultiBar();
   }
 
@@ -107,13 +104,12 @@ export class ConsoleReporter {
    */
   showHeader(): void {
     if (this.config.quiet) return;
-
     const title = 'A11Y Analyze - Accessibility Testing Tool';
     const subtitle = 'Comprehensive WCAG 2.2 Compliance Analysis';
     const separator = '='.repeat(Math.min(title.length, this.config.maxWidth));
 
-    console.log(chalk.bold.blue('\n' + separator));
-    console.log(chalk.bold.blue(title));
+    console.log(chalk.bold(chalk.blue('\n' + separator)));
+    console.log(chalk.bold(chalk.blue(title)));
     console.log(chalk.gray(subtitle));
     console.log(chalk.blue(separator + '\n'));
   }
@@ -327,7 +323,6 @@ export class ConsoleReporter {
    */
   showPageResults(scanResult: ScanResult, scoreBreakdown?: ScoreBreakdown): void {
     if (this.config.quiet) return;
-
     const url = scanResult.url;
     const score = scanResult.score;
     const issues = scanResult.issues;
@@ -407,18 +402,17 @@ export class ConsoleReporter {
     console.log(chalk.bold(`\n⚠️  Issues Found (${issues.length} total):`));
 
     const severityOrder = ['critical', 'serious', 'moderate', 'minor', 'warning'];
-    const severityColors = {
-      critical: chalk.red.bold,
-      serious: chalk.red,
-      moderate: chalk.yellow,
-      minor: chalk.blue,
-      warning: chalk.gray,
+    const severityColors: Record<string, (text: string) => string> = {
+      critical: this.getColorFn(chalk.red),
+      serious: this.getColorFn(chalk.yellow),
+      moderate: this.getColorFn(chalk.magenta),
+      minor: this.getColorFn(chalk.cyan),
     };
 
     severityOrder.forEach(severity => {
       const count = severityCounts[severity];
       if (count) {
-        const colorFn = severityColors[severity as keyof typeof severityColors];
+        const colorFn = severityColors[severity] || ((t: string) => t);
         console.log(`  ${colorFn(severity.padEnd(8))}: ${count}`);
       }
     });
@@ -463,7 +457,6 @@ export class ConsoleReporter {
    */
   showSiteResults(siteScore: SiteScore, crawlSession: CrawlSession): void {
     if (this.config.quiet) return;
-
     console.log(chalk.bold('\n🌐 Site-Wide Results'));
     console.log('═'.repeat(Math.min(20, this.config.maxWidth)));
 
@@ -572,7 +565,6 @@ export class ConsoleReporter {
    */
   showFinalSummary(siteScore: SiteScore, crawlSession: CrawlSession): void {
     if (this.config.quiet) return;
-
     const duration = Date.now() - this.startTime.getTime();
     const pagesScanned = siteScore.pageScores.length;
     const totalIssues = crawlSession.stats.totalIssues;
@@ -626,14 +618,14 @@ export class ConsoleReporter {
    */
   logWarning(message: string): void {
     if (!this.config.quiet) {
-      console.log(chalk.yellow(`⚠ Warning: ${message}`));
+      console.warn(message);
     }
   }
   logError(message: string, error?: Error): void {
     if (!this.config.quiet) {
-      console.log(chalk.red(`🚨 Error: ${message}`));
+      console.error(message);
       if (error) {
-        console.log(chalk.red(error.stack || error.message));
+        console.error(error.stack);
       }
     }
   }
@@ -644,7 +636,9 @@ export class ConsoleReporter {
   }
   logInfo(message: string): void {
     if (!this.config.quiet) {
-      console.log(chalk.cyan(message));
+      if (this.config && this.config.verbose) {
+        console.log(message);
+      }
     }
   }
   logSummary(summary: string[]): void {
@@ -918,12 +912,31 @@ export class ConsoleReporter {
    * Helper methods
    */
 
-  private getScoreColor(score: number): typeof chalk {
-    if (score >= 90) return chalk.green.bold;
-    if (score >= 80) return chalk.green;
+  // Fix getScoreColor to always return a function
+  private getScoreColor(score: number): (text: string) => string {
+    if (score >= 90) return chalk.green;
     if (score >= 70) return chalk.yellow;
-    if (score >= 60) return chalk.hex('#FFA500'); // Orange color
+    if (score >= 50) return chalk.magenta;
     return chalk.red;
+  }
+
+  // Helper to get color function or identity if colors are disabled
+  private getColorFn(colorFn: (text: string) => string): (text: string) => string {
+    if (this.config && this.config.colors === false) {
+      return (text: string) => text;
+    }
+    return colorFn;
+  }
+
+  // Fix getSeverityColor to always return a function
+  private getSeverityColor(severity: string): (text: string) => string {
+    switch (severity) {
+      case 'critical': return chalk.red;
+      case 'serious': return chalk.yellow;
+      case 'moderate': return chalk.magenta;
+      case 'minor': return chalk.cyan;
+      default: return chalk.white;
+    }
   }
 
   private getSeverityIcon(severity: string): string {

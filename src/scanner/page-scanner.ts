@@ -548,6 +548,8 @@ export class PageScanner {
           final: url,
           redirects: 0,
         },
+        title: undefined,
+        language: undefined,
       };
 
       return {
@@ -675,6 +677,8 @@ export class PageScanner {
           final: pageInfo.url,
           redirects: navigationResult?.redirects ?? 0,
         },
+        title: pageInfo.title || undefined,
+        language: await page.evaluate(() => document.documentElement.lang || undefined),
       };
 
     } catch (error) {
@@ -691,6 +695,8 @@ export class PageScanner {
           final: page.url(),
           redirects: 0,
         },
+        title: undefined,
+        language: undefined,
       };
     }
   }
