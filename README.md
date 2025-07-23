@@ -3,7 +3,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/pclark/a11yanalyze/actions)
 [![Coverage Status](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](./coverage)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/badge/npm-latest-orange)](https://www.npmjs.com/package/a11yanalyze)
+[![npm version](https://img.shields.io/badge/npm-1.2.0-orange)](https://www.npmjs.com/package/a11yanalyze)
 
 ---
 
@@ -38,12 +38,15 @@
    a11yanalyze scan https://example.com --output report.json --format both
    ```
 
-3. **Batch Scan Storybook**
+3. **Batch Scan Storybook (Enhanced)**
    ```bash
-   a11yanalyze storybook-batch --storybook-url http://localhost:6006 --output-dir ./vpat-reports --format both
+   a11yanalyze storybook-batch --storybook-url http://localhost:6006 --output-dir ./vpat-reports --format both --batch-size 5
    ```
-   > **Supports Storybook 7+ (index.json) and falls back to stories.json for older versions.**
-   > If you see "No stories found in Storybook instance.", check that your Storybook is running, accessible, and that /index.json or /stories.json endpoints are available. For composed Storybooks, ensure refs are loaded.
+   > **🆕 Enhanced Storybook Support:** Now supports Storybook 7+ with parallel batch processing for faster scanning!
+   > - **Storybook 7+**: Uses `/index.json` for story discovery
+   - **Storybook 6**: Falls back to `/stories.json` for compatibility
+   - **Parallel Processing**: Configurable batch size for concurrent story scanning
+   - **Performance**: Significantly faster scanning with `p-limit` concurrency control
 
 4. **Manual Audit**
    ```bash
@@ -61,10 +64,15 @@
 ## 🛠️ CLI Reference
 
 - `scan <url>`: Scan a single page
-- `storybook-batch`: Batch scan all Storybook stories
+- `storybook-batch`: Batch scan all Storybook stories with parallel processing
 - `html-batch`: Batch scan HTML files or URLs
 - `manual-guide <target>`: Interactive manual audit
 - `generate-checklist <target>`: Output manual testing checklist
+
+**🆕 New Storybook Batch Options:**
+- `--batch-size <number>`: Control parallel processing (default: 5)
+- `--timeout <ms>`: Set scan timeout per story
+- `--wcag-level <level>`: Set WCAG compliance level (A, AA, AAA)
 
 See `a11yanalyze <command> --help` for all options.
 
@@ -74,8 +82,8 @@ See `a11yanalyze <command> --help` for all options.
 
 ## 📋 Common Workflows
 
-- **Storybook batch audit:**  
-  `a11yanalyze storybook-batch --storybook-url ...`
+- **🆕 Enhanced Storybook batch audit:**  
+  `a11yanalyze storybook-batch --storybook-url ... --batch-size 10`
 - **Static HTML batch:**  
   `a11yanalyze html-batch --input-dir ...`
 - **Manual VPAT audit:**  
@@ -138,8 +146,27 @@ Ran all test suites.
 ## 🔗 Integration
 
 - **CI/CD:** Add to your pipeline for automated checks.
-- **Design System:** Use batch audits for all components.
+- **Design System:** Use enhanced batch audits for all components with parallel processing.
 - **Product Teams:** Use for web apps, static sites, and new features.
+
+## 🆕 Recent Improvements (v1.2.0)
+
+### Enhanced Storybook Integration
+- **Storybook 7+ Support**: Native support for the latest Storybook version using `/index.json`
+- **Parallel Processing**: Configurable batch size for concurrent story scanning using `p-limit`
+- **Performance Boost**: Significantly faster scanning of large Storybook instances
+- **Backward Compatibility**: Maintains support for Storybook 6 with `/stories.json` fallback
+
+### Error Resilience & Performance
+- **Circuit Breaker Pattern**: Prevents cascading failures during batch operations
+- **Adaptive Timeouts**: Intelligent timeout management based on operation history
+- **Retry Mechanisms**: Configurable retry strategies with exponential backoff
+- **Concurrent Operation Limits**: Prevents resource exhaustion during parallel processing
+
+### Enhanced Error Handling
+- **Comprehensive Error Logging**: Detailed error categorization and reporting
+- **Graceful Degradation**: Continues processing even when individual stories fail
+- **Technical Issue Tracking**: Automatic detection and reporting of system-level issues
 
 ---
 
@@ -195,10 +222,11 @@ This tool is built on the industry-standard **axe-core** engine, just like the m
 
 ### Unique Advantages
 - **VPAT/Section 508/508+ Reporting:** Out-of-the-box, human-friendly, and machine-readable reports for compliance and procurement.
-- **Storybook/Component Batch:** Scan all stories/components in a design system or library, not just pages.
+- **🆕 Enhanced Storybook/Component Batch:** Parallel processing for faster scanning of large design systems with configurable concurrency.
 - **Custom Scoring & Profiles:** Weighted scoring, warnings, and compliance breakdowns.
 - **Manual/Hybrid Workflows:** Checklist generation, cognitive accessibility, and screen reader simulation.
 - **Modern CLI & Output:** Markdown, JSON, and console output with remediation tips and grouping.
+- **🆕 Error Resilience:** Circuit breaker patterns, adaptive timeouts, and graceful degradation for production reliability.
 
 ### What This Tool Reuses
 - **axe-core**: For all automated rules and WCAG mapping.
