@@ -3,14 +3,50 @@
   "version": "1.0.0",
   "description": "Accessibility analysis tool",
   "main": "dist/index.js",
+  "bin": {
+    "a11yanalyze": "./dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "wcag",
+    "testing",
+    "cli",
+    "automation"
+  ],
+  "author": "Phillip Clark",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phillipclark/a11yanalyze.git"
+  },
+  "bugs": {
+    "url": "https://github.com/phillipclark/a11yanalyze/issues"
+  },
+  "homepage": "https://github.com/phillipclark/a11yanalyze#readme",
   "scripts": {
     "build": "tsc",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "clean": "rm -rf dist/ node_modules/.cache/ tsconfig.tsbuildinfo",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run test && npm run build",
+    "release": "release-it",
+    "release:patch": "release-it patch",
+    "release:minor": "release-it minor",
+    "release:major": "release-it major",
+    "release:preview": "release-it --dry-run"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^10.0.1",
     "@types/jest": "^30.0.0",
     "inquirer": "^12.8.2",
     "jest": "^29.0.0",
+    "release-it": "^19.0.4",
     "ts-jest": "^29.0.0",
     "typescript": "^5.8.3"
   },
