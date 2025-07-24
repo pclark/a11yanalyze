@@ -719,15 +719,28 @@ export class ErrorLogger {
   }
 
   private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    // Fallback for Node.js < v14.17
+    const { randomBytes } = require('crypto');
+    return randomBytes(16).toString('hex');
   }
 
   private generateErrorId(): string {
-    return `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    const { randomBytes } = require('crypto');
+    return randomBytes(16).toString('hex');
   }
 
   private generateIssueId(): string {
-    return `issue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    const { randomBytes } = require('crypto');
+    return randomBytes(16).toString('hex');
   }
 
   /**

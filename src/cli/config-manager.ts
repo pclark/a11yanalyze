@@ -352,6 +352,7 @@ export class ConfigManager {
 
   private loadedConfig?: A11yAnalyzeConfig;
   private configSources: ConfigSource[] = [];
+  private static readonly PROTOTYPE_POLLUTION_KEYS = ['__proto__', 'constructor', 'prototype'];
 
   /**
    * Load configuration from all sources with proper priority
@@ -718,7 +719,10 @@ export class ConfigManager {
    */
   private deepMerge(target: any, source: any): any {
     for (const key in source) {
-      if (source.hasOwnProperty(key)) {
+      if (
+        source.hasOwnProperty(key) &&
+        !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(key)
+      ) {
         if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
           if (!target[key] || typeof target[key] !== 'object') {
             target[key] = {};
@@ -747,21 +751,17 @@ export class ConfigManager {
   private setNestedValue(obj: any, path: string, value: any): void {
     const keys = path.split('.');
     if (keys.length === 0) return;
-    
     let current = obj;
-    
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
-      if (!key) continue;
-      
+      if (!key || ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(key)) continue;
       if (!current[key] || typeof current[key] !== 'object') {
         current[key] = {};
       }
       current = current[key];
     }
-    
     const finalKey = keys[keys.length - 1];
-    if (finalKey) {
+    if (finalKey && !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(finalKey)) {
       current[finalKey] = value;
     }
   }

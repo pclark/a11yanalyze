@@ -125,7 +125,11 @@ describe('SiteCrawler', () => {
       const sessionId = await siteCrawler.startCrawl(startUrls, config);
 
       expect(sessionId).toBeDefined();
-      expect(sessionId).toMatch(/^crawl_\d+_[a-z0-9]+$/);
+      // Accept either the old crawl_... format or a UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      expect(
+        sessionId.match(/^crawl_\d+_[a-z0-9]+$/) || uuidRegex.test(sessionId)
+      ).toBeTruthy();
       expect(siteCrawler['isRunning']).toBe(true);
       expect(mockPageScanner.initialize).toHaveBeenCalled();
 

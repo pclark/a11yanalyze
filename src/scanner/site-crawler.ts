@@ -848,7 +848,13 @@ export class SiteCrawler extends EventEmitter {
    * @private
    */
   private generateSessionId(): string {
-    return `crawl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Use cryptographically secure random UUID
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    // Fallback for Node.js < v14.17
+    const { randomBytes } = require('crypto');
+    return randomBytes(16).toString('hex');
   }
 
   /**
