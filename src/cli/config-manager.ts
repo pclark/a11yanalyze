@@ -737,7 +737,14 @@ export class ConfigManager {
           }
           this.deepMerge(target[key], source[key]);
         } else {
-          target[key] = source[key];
+          // Additional protection: ensure the value itself is not a prototype pollution risk
+          const value = source[key];
+          if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            // For objects, create a safe copy using JSON to prevent prototype pollution
+            target[key] = JSON.parse(JSON.stringify(value));
+          } else {
+            target[key] = value;
+          }
         }
       }
     }
@@ -770,7 +777,13 @@ export class ConfigManager {
     }
     const finalKey = keys[keys.length - 1];
     if (finalKey && !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(finalKey)) {
-      current[finalKey] = value;
+      // Additional protection: ensure the value itself is not a prototype pollution risk
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        // For objects, create a safe copy using JSON to prevent prototype pollution
+        current[finalKey] = JSON.parse(JSON.stringify(value));
+      } else {
+        current[finalKey] = value;
+      }
     }
   }
 
