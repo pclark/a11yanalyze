@@ -777,10 +777,20 @@ export class ConfigManager {
     }
     const finalKey = keys[keys.length - 1];
     if (finalKey && !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(finalKey)) {
-      // Additional protection: ensure the value itself is not a prototype pollution risk
+      // For objects, create a safe copy to prevent prototype pollution
       if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-        // For objects, create a safe copy using JSON to prevent prototype pollution
-        current[finalKey] = JSON.parse(JSON.stringify(value));
+        try {
+          current[finalKey] = JSON.parse(JSON.stringify(value));
+        } catch {
+          // If JSON serialization fails, create a simple object copy
+          const safeCopy: any = {};
+          for (const key in value) {
+            if (value.hasOwnProperty(key) && !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(key)) {
+              safeCopy[key] = value[key];
+            }
+          }
+          current[finalKey] = safeCopy;
+        }
       } else {
         current[finalKey] = value;
       }
