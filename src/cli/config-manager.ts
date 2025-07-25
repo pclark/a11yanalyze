@@ -608,29 +608,37 @@ export class ConfigManager {
     const config: any = {};
     if (!cliOptions) return { config };
 
+    // Filter out prototype pollution keys from CLI options
+    const safeCliOptions: any = {};
+    for (const key in cliOptions) {
+      if (cliOptions.hasOwnProperty(key) && !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(key)) {
+        safeCliOptions[key] = cliOptions[key];
+      }
+    }
+
     // Scanning options
-    if (cliOptions.wcagLevel) config.scanning = { ...config.scanning, wcagLevel: cliOptions.wcagLevel };
-    if (cliOptions.includeAaa !== undefined) config.scanning = { ...config.scanning, includeAAA: Boolean(cliOptions.includeAaa) };
-    if (cliOptions.includeAria !== undefined) config.scanning = { ...config.scanning, includeARIA: Boolean(cliOptions.includeAria) };
-    if (cliOptions.timeout !== undefined) config.scanning = { ...config.scanning, timeout: typeof cliOptions.timeout === 'string' ? parseInt(cliOptions.timeout, 10) : cliOptions.timeout };
+    if (safeCliOptions.wcagLevel) config.scanning = { ...config.scanning, wcagLevel: safeCliOptions.wcagLevel };
+    if (safeCliOptions.includeAaa !== undefined) config.scanning = { ...config.scanning, includeAAA: Boolean(safeCliOptions.includeAaa) };
+    if (safeCliOptions.includeAria !== undefined) config.scanning = { ...config.scanning, includeARIA: Boolean(safeCliOptions.includeAria) };
+    if (safeCliOptions.timeout !== undefined) config.scanning = { ...config.scanning, timeout: typeof safeCliOptions.timeout === 'string' ? parseInt(safeCliOptions.timeout, 10) : safeCliOptions.timeout };
 
     // Browser options
-    if (cliOptions.headless !== undefined) config.browser = { ...config.browser, headless: Boolean(cliOptions.headless) };
-    if (cliOptions.viewport) {
-      const [width, height] = typeof cliOptions.viewport === 'string' && cliOptions.viewport.includes('x')
-        ? cliOptions.viewport.split('x').map(Number)
+    if (safeCliOptions.headless !== undefined) config.browser = { ...config.browser, headless: Boolean(safeCliOptions.headless) };
+    if (safeCliOptions.viewport) {
+      const [width, height] = typeof safeCliOptions.viewport === 'string' && safeCliOptions.viewport.includes('x')
+        ? safeCliOptions.viewport.split('x').map(Number)
         : [1280, 720];
       config.browser = { ...config.browser, viewport: { width, height } };
     }
 
     // Output options
-    if (cliOptions.format) config.output = { ...config.output, format: cliOptions.format };
-    if (cliOptions.verbose !== undefined) config.output = { ...config.output, verbose: Boolean(cliOptions.verbose) };
-    if (cliOptions.quiet !== undefined) config.output = { ...config.output, quiet: Boolean(cliOptions.quiet) };
-    if (cliOptions.debug !== undefined) config.output = { ...config.output, debug: Boolean(cliOptions.debug) };
+    if (safeCliOptions.format) config.output = { ...config.output, format: safeCliOptions.format };
+    if (safeCliOptions.verbose !== undefined) config.output = { ...config.output, verbose: Boolean(safeCliOptions.verbose) };
+    if (safeCliOptions.quiet !== undefined) config.output = { ...config.output, quiet: Boolean(safeCliOptions.quiet) };
+    if (safeCliOptions.debug !== undefined) config.output = { ...config.output, debug: Boolean(safeCliOptions.debug) };
 
     // Scoring options
-    if (cliOptions.profile) config.scoring = { ...config.scoring, profile: cliOptions.profile };
+    if (safeCliOptions.profile) config.scoring = { ...config.scoring, profile: safeCliOptions.profile };
 
     // Add more CLI options as needed...
 
@@ -706,7 +714,7 @@ export class ConfigManager {
     
     const cloned = {} as any;
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (obj.hasOwnProperty(key) && !ConfigManager.PROTOTYPE_POLLUTION_KEYS.includes(key)) {
         cloned[key] = this.deepClone(obj[key]);
       }
     }
